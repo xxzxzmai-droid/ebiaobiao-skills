@@ -1,0 +1,21 @@
+{
+  "packageId": "wpkReplace001",
+  "spaceId": "${EBIAOBIAO_SPACE_ID}",
+  "version": "0.1.0",
+  "entry": "./src/index.tsx",
+  "name": {
+    "zh-CN": "e报表业务助手",
+    "en-US": "E-report Assistant"
+  },
+  "description": {
+    "zh-CN": "面向表格数据校验、预览和批量处理的自建小程序",
+    "en-US": "A self-built widget for validation, preview, and batch processing"
+  },
+  "icon": "./package_icon.png",
+  "cover": "./cover.png",
+  "authorName": "maimai",
+  "authorIcon": "./package_icon.png",
+  "authorLink": "https://example.com",
+  "authorEmail": "maimai@example.local",
+  "sandbox": false
+}
