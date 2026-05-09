@@ -1,10 +1,10 @@
 """Shared constants: districts, industries, color mappings, enums.
 
 Color values are vika SingleSelect/MultiSelect color names — must be plain
-strings (not {name: ...} objects), per the private deployment schema.
+strings (not {name: ...} objects), per the configured deployment schema.
 """
 
-# vika 私有部署支持的 option color 名（实测）
+# vika 目标环境支持的 option color 名（实测）
 VIKA_VALID_COLORS = {
     "gray", "red", "orange", "yellow", "green", "cyan",
     "blue", "purple", "pink", "brown", "dustRed", "lime",

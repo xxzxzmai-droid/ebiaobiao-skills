@@ -1,4 +1,4 @@
 interface:
-  display_name: "e报表配置初始化"
-  short_description: "一键初始化e报表项目并切换token、空间站和Widget环境"
-  default_prompt: "使用 e报表配置初始化技能创建项目配置、保存/切换用户 token 和空间站 profile、检查环境并准备 Widget 开发依赖。"
+  display_name: "报表配置初始化"
+  short_description: "一键初始化报表项目并切换token、空间站和Widget环境"
+  default_prompt: "使用 报表配置初始化技能创建项目配置、保存/切换用户 token 和空间站 profile、检查环境并准备 Widget 开发依赖。"

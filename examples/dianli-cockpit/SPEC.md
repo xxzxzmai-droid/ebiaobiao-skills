@@ -4,13 +4,13 @@
 **作者**: xxzxzmai-droid（驱动） + Claude Code（执行）
 **目标仓库**: [`ebiaobiao-skills`](https://github.com/xxzxzmai-droid/ebiaobiao-skills) `examples/dianli-cockpit/`
 **目标空间站**: 由 `.env.local` 中 `EBIAOBIAO_SPACE_ID` 指定（开发期=测试空间）
-**目标域名**: `https://app.ehv.csg.cn:7886`
+**目标域名**: `<configured-host>`
 
 ## 1. 目标与范围
 
 ### 1.1 目标
 
-为 `ebiaobiao-skills` 提供一个**旗舰级 demo**，全面展示该 skill 包对私有部署 e报表（vika）的 Fusion API、Widget 自建小程序、Script 小部件、Webhook 自动化、多空间 profile、全局发布等能力。
+为 `ebiaobiao-skills` 提供一个**旗舰级 demo**，全面展示该 skill 包对目标环境 报表（vika）的 Fusion API、Widget 自建小程序、Script 小部件、Webhook 自动化、多空间 profile、全局发布等能力。
 
 成果同时服务两个用途：
 
@@ -43,7 +43,7 @@
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│  e报表 vika 私有部署  https://app.ehv.csg.cn:7886                │
+│  报表 vika 目标环境  <configured-host>                │
 │                                                                  │
 │  7 张数据表（详见 §3 schema）                                    │
 └────┬─────────────────────────────────────────────────────┬───────┘
@@ -83,7 +83,7 @@ ScriptWidget 兜底（贴 vika Script 小部件，手动跑） ─────�
 
 ## 3. 数据 Schema（7 张新表）
 
-> 用 `电力驾驶舱_*` 前缀，跟老 `电力看经济_*` 8 张表共存不冲突。所有字段类型按 e报表私有部署实测格式（color 字符串 / icon slug / dateFormat 枚举 / Number defaultValue 字符串 / Formula 不带 valueType 等）。
+> 用 `电力驾驶舱_*` 前缀，跟老 `电力看经济_*` 8 张表共存不冲突。所有字段类型按 报表目标环境实测格式（color 字符串 / icon slug / dateFormat 枚举 / Number defaultValue 字符串 / Formula 不带 valueType 等）。
 
 ### 3.1 区域配色（7 区固定映射）
 
@@ -569,7 +569,7 @@ cd cockpit-widget
 npm install
 npm start    # https://localhost:9000/widget_bundle.js
 
-# 6. 在 e报表 UI 任意数据表 → 小部件 → 开发模式 → 输入上面 URL
+# 6. 在 报表 UI 任意数据表 → 小部件 → 开发模式 → 输入上面 URL
 # 7. 在"电力驾驶舱_预警事件"表配自动化触发 webhook（README 内有图示步骤）
 ```
 
@@ -589,7 +589,7 @@ npm start    # https://localhost:9000/widget_bundle.js
 | 风险 | 影响 | 缓解 |
 |---|---|---|
 | ECharts 在 widget iframe 内渲染问题 | 图表可能不显示 | 先做 minimal demo 验证；fallback 到手写 SVG |
-| vika 自动化 "发送 HTTP 请求" 在私有部署可能不开放 | webhook 演示走不通 | fallback：simulator 直接调 webhook receiver |
+| vika 自动化 "发送 HTTP 请求" 在目标环境可能不开放 | webhook 演示走不通 | fallback：simulator 直接调 webhook receiver |
 | widget-sdk 1.10.x 在 React 16.14 上某些 API 行为不一致 | 写回流程出问题 | 故意保留，写到 pitfalls.md |
 | 模拟器多线程并发写 vika 触发 429 | 部分写丢失 | 加退避；测出真实 QPS 上限并写文档 |
 | 1500 条种子灌入慢 | 启动时间长 | 进度条 UI；并行 worker 灌种 |
@@ -604,7 +604,7 @@ npm start    # https://localhost:9000/widget_bundle.js
 
 ---
 
-## 附 · 已知 e报表私有部署 schema 实测要点（直接抄进实施）
+## 附 · 已知 报表目标环境 schema 实测要点（直接抄进实施）
 
 - 创建 datasheet 的 fields 数组里**复杂字段必须发完整 property**（SingleSelect 必须有 options，否则报"Invalid value for fields[X].property"）。**推荐流程**：先建空表只带 name → field add 一个个补复杂字段
 - SingleSelect/MultiSelect 的 `options[].color` 用**字符串** `"red"` 而非 `{name:"red"}`

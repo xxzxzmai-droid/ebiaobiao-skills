@@ -1,15 +1,15 @@
-# e报表开发 Skills
+# 报表开发 Skills
 
-面向 Codex、Claude Code 等 coding agent 的 e报表开发技能包。用于创建表格、处理数据、开发发布自建 Widget 小程序、编写脚本小程序和设计自动化工作流。
+面向 Codex、Claude Code 等 coding agent 的 报表开发技能包。用于创建表格、处理数据、开发发布自建 Widget 小程序、编写脚本小程序和设计自动化工作流。
 
 ## 能做什么
 
 - 创建表格、字段、视图、样例数据和业务台账。
 - 查询空间站、目录、表格、字段、视图和记录。
 - 批量创建、更新、删除记录，上传附件并回写。
-- 开发和发布自建 Widget 小程序，适配手机、桌面和企业微信内嵌窗口。
+- 开发和发布自建 Widget 小程序，适配手机、桌面和内嵌窗口。
 - 编写表内脚本小程序，处理校验、查找替换、批量更新等轻量任务。
-- 设计 eLink、企业微信、后端网关和定时任务等自动化方案。
+- 设计内嵌入口、后端网关和定时任务等自动化方案。
 
 ## 安装
 
@@ -96,20 +96,18 @@ python "$HOME\.codex\skills\ebiaobiao-setup\scripts\ebiao_setup.py" init --targe
 python "$HOME\.codex\skills\ebiaobiao-setup\scripts\ebiao_setup.py" check --target .
 ```
 
-如果缺少 API Token 或空间站 ID，初始化脚本会打开本地配置文件。用户只在本机文件里填写，不要把 Token 写进对话。
-
-默认 e报表地址已内置。只有使用其他部署地址时，才需要在本地配置文件中修改 `EBIAOBIAO_HOST`。
+部署地址不写在仓库里。初始化时如果缺少地址、API Token 或空间站 ID，脚本会打开本地配置文件，用户在本机填写 `EBIAOBIAO_HOST`、`EBIAOBIAO_API_TOKEN` 和 `EBIAOBIAO_SPACE_ID`，不要把 Token 写进对话。
 
 ## 使用
 
 初始化完成后，直接用自然语言描述目标：
 
 ```text
-使用 e报表开发技能，创建一个工作督办系统，包含表格、样例数据和自建小程序。
+使用 报表开发技能，创建一个工作督办系统，包含表格、样例数据和自建小程序。
 ```
 
 ```text
-把当前 e报表开发目标切换到财务测试空间。
+把当前 报表开发目标切换到财务测试空间。
 ```
 
 ```text

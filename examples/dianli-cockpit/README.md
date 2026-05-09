@@ -1,6 +1,6 @@
 # 电力看经济驾驶舱 demo
 
-旗舰 demo 展示 `ebiaobiao-skills` 对私有部署 e报表（vika）的全套能力。设计说明见 [SPEC.md](SPEC.md)，分阶段实施计划见 [plans/](plans/)。
+旗舰 demo 展示 `ebiaobiao-skills` 对目标环境 报表（vika）的全套能力。设计说明见 [SPEC.md](SPEC.md)，分阶段实施计划见 [plans/](plans/)。
 
 新表用 `电力驾驶舱_*` 前缀，不动老的 `电力看经济_*` 8 张表。
 

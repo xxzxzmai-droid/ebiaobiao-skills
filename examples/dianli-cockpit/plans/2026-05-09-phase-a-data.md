@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:subagent-driven-development` (recommended) or `superpowers:executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在 e报表里建好 7 张电力看经济数据表（含正确字段类型）+ 灌入 ~2500 条幂等真实仿真种子数据，能在 vika UI 直观看到结构与数据。
+**Goal:** 在 报表里建好 7 张电力看经济数据表（含正确字段类型）+ 灌入 ~2500 条幂等真实仿真种子数据，能在 vika UI 直观看到结构与数据。
 
 **Architecture:** Python 3.10+ 单线程脚本，shell 调用 `ebiao_fusion.py` CLI 与 vika 通讯（重用已有工具，避免重写 HTTP 客户端）。`simulator/shared/` 下分 5 个职责清晰的模块（schema 定义 / vika 薄封装 / 表+字段创建 / 数据生成 / 幂等灌入）。TDD：每模块先写 unit test（mock subprocess），再写实现。
 
@@ -163,7 +163,7 @@ def test_districts_count_and_colors():
         "惠城区", "惠阳区", "大亚湾区", "仲恺高新区",
         "博罗县", "惠东县", "龙门县",
     }
-    # color 必须是单字符串（私有部署 schema 实测要求）
+    # color 必须是单字符串（目标环境 schema 实测要求）
     for name, color in C.DISTRICT_COLOR.items():
         assert isinstance(color, str), f"{name} color must be str, got {type(color)}"
         assert color in C.VIKA_VALID_COLORS, f"{name}: {color}"
@@ -211,10 +211,10 @@ Expected: `ModuleNotFoundError: No module named 'simulator.shared.constants'` �
 """Shared constants: districts, industries, color mappings, enums.
 
 Color values are vika SingleSelect/MultiSelect color names — must be plain
-strings (not {name: ...} objects), per the private deployment schema.
+strings (not {name: ...} objects), per the configured deployment schema.
 """
 
-# vika 私有部署支持的 option color 名（实测）
+# vika 目标环境支持的 option color 名（实测）
 VIKA_VALID_COLORS = {
     "gray", "red", "orange", "yellow", "green", "cyan",
     "blue", "purple", "pink", "brown", "dustRed", "lime",
@@ -340,7 +340,7 @@ def test_every_field_has_name_and_type():
 
 
 def test_singleselect_options_use_string_color():
-    """e报表私有部署要求 color 是字符串，不是 {name: ...} 对象。"""
+    """报表目标环境要求 color 是字符串，不是 {name: ...} 对象。"""
     for s in schema.ALL_SCHEMAS:
         for f in s["fields"]:
             if f["type"] in ("SingleSelect", "MultiSelect"):
@@ -352,7 +352,7 @@ def test_singleselect_options_use_string_color():
 
 
 def test_datetime_dateformat_in_enum():
-    """e报表私有部署 dateFormat 必须是枚举集之一。"""
+    """报表目标环境 dateFormat 必须是枚举集之一。"""
     valid_formats = {
         "YYYY/MM/DD", "YYYY-MM-DD", "DD/MM/YYYY",
         "YYYY-MM", "MM-DD", "YYYY", "MM", "DD",
@@ -366,7 +366,7 @@ def test_datetime_dateformat_in_enum():
 
 
 def test_number_defaultvalue_is_string():
-    """e报表私有部署要求 Number.defaultValue 是字符串。"""
+    """报表目标环境要求 Number.defaultValue 是字符串。"""
     for s in schema.ALL_SCHEMAS:
         for f in s["fields"]:
             if f["type"] == "Number":
@@ -423,7 +423,7 @@ Expected: ImportError on `simulator.shared.schema`.
 Each schema is a dict with `name` (str) and `fields` (list of field dicts).
 Each field has `name`, `type`, and optional `property`.
 
-Schema field types and property formats are calibrated for the e报表 private
+Schema field types and property formats are calibrated for the 报表 configured
 deployment (color is string, dateFormat is enum, Number defaultValue is str,
 Rating icon is emoji slug, etc. — see SPEC.md §10).
 """
@@ -577,7 +577,7 @@ Expected: `9 passed`.
 
 ```bash
 git add simulator/shared/schema.py simulator/tests/test_schema.py
-git commit -m "feat(dianli-cockpit): 7-table schema with private-deployment-correct property formats"
+git commit -m "feat(dianli-cockpit): 7-table schema with configured-deployment-correct property formats"
 ```
 
 ---
@@ -1742,9 +1742,9 @@ git commit -m "feat(dianli-cockpit): bootstrap CLI — schemas + seeders wired t
 ```bash
 cd ~/projects/ebiaobiao-skills/examples/dianli-cockpit
 # 父项目 .env.local 已有 token + spaceId（之前的会话已配好）
-ls -la /Users/Zhuanz/Documents/2026/2026-5/e报表开发-2/.env.local
+ls -la <project>/.env.local
 # 让 simulator 读父项目的 env
-export $(grep -v '^#' /Users/Zhuanz/Documents/2026/2026-5/e报表开发-2/.env.local | xargs)
+export $(grep -v '^#' <project>/.env.local | xargs)
 echo "token=${EBIAOBIAO_API_TOKEN:0:8}... space=$EBIAOBIAO_SPACE_ID"
 ```
 
@@ -1780,7 +1780,7 @@ Expected:
 
 - [ ] **Step 4: UI 验证**
 
-打开 `https://app.ehv.csg.cn:7886`，进测试空间根目录：
+打开 `<configured-host>`，进测试空间根目录：
 
 - [ ] 看到 7 张新表 `电力看经济_*`
 - [ ] 打开 `电力驾驶舱_行业指标`：

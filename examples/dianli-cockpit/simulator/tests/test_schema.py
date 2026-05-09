@@ -21,9 +21,9 @@ class TestSchemaShape(unittest.TestCase):
                 self.assertIsInstance(f["type"], str)
 
 
-class TestPrivateDeploymentQuirks(unittest.TestCase):
+class TestConfiguredDeploymentQuirks(unittest.TestCase):
     def test_singleselect_options_use_string_color(self):
-        """e报表私有部署要求 color 是字符串，不是 {name: ...} 对象。"""
+        """报表目标环境要求 color 是字符串，不是 {name: ...} 对象。"""
         for s in schema.ALL_SCHEMAS:
             for f in s["fields"]:
                 if f["type"] in ("SingleSelect", "MultiSelect"):

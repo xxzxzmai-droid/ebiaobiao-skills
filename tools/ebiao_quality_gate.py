@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Repository quality gate for the reusable e报表 skills package."""
+"""Repository quality gate for the reusable 报表 skills package."""
 
 from __future__ import annotations
 
@@ -116,6 +116,16 @@ def check_sensitive_text() -> str:
     failures: list[str] = []
     suspicious_id = re.compile(r"\b(?:spc|dst|rec|fld|viw)(?=[A-Za-z0-9]*\d)[A-Za-z0-9]{8,}\b|\bwpk(?!Replace001\b)(?=[A-Za-z0-9]*\d)[A-Za-z0-9]{10}\b")
     screenshot_marker = "docs/" + "screenshots/"
+    forbidden_terms = [
+        "e" + "\u62a5\u8868",
+        "e" + "link",
+        "e" + "Link",
+        "\u4f01\u4e1a" + "\u5fae\u4fe1",
+        "We" + "Chat",
+        "\u5fae" + "\u4fe1",
+        "\u79fb\u52a8" + "\u529e\u516c",
+    ]
+    forbidden_hosts = [".".join(["app", "ehv", "csg", "cn"]), ":" + "".join(["7", "8", "8", "6"])]
     for path in git_files():
         if path.suffix.lower() in {".png", ".jpg", ".jpeg", ".gif", ".ico"}:
             continue
@@ -133,6 +143,12 @@ def check_sensitive_text() -> str:
                 failures.append(f"{rel}:{line_no} contains token-like env assignment")
             if screenshot_marker in line:
                 failures.append(f"{rel}:{line_no} references local screenshot output")
+            for term in forbidden_terms:
+                if term in line:
+                    failures.append(f"{rel}:{line_no} contains forbidden visible term {term}")
+            for host in forbidden_hosts:
+                if host in line:
+                    failures.append(f"{rel}:{line_no} contains hard-coded deployment host marker")
     if failures:
         raise RuntimeError("; ".join(failures))
     return "tracked text is sanitized"
@@ -302,7 +318,7 @@ def find_or_create_smoke_datasheet() -> str:
         pass
     payload = {
         "name": SMOKE_TABLE_NAME,
-        "description": "Reusable development-space smoke table for e报表 skill validation.",
+        "description": "Reusable development-space smoke table for 报表 skill validation.",
         "fields": [
             {"type": "SingleText", "name": "标题", "property": {"defaultValue": ""}},
             {"type": "SingleText", "name": "状态", "property": {"defaultValue": ""}},
@@ -343,7 +359,7 @@ def check_live_write() -> str:
     fusion(["delete-records", datasheet_id, record_id])
 
     with tempfile.NamedTemporaryFile("w", suffix=".txt", encoding="utf-8", delete=False) as handle:
-        handle.write("e报表 skill quality gate attachment smoke\n")
+        handle.write("报表 skill quality gate attachment smoke\n")
         attachment_path = handle.name
     TEMP_FILES.append(attachment_path)
     fusion(["upload-attachment", datasheet_id, attachment_path])
@@ -354,7 +370,7 @@ def check_live_write() -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run e报表 skills repository quality checks")
+    parser = argparse.ArgumentParser(description="Run 报表 skills repository quality checks")
     parser.add_argument("--live", choices=["auto", "never", "write"], default="auto", help="live-write policy")
     parser.add_argument("--widget-build", action="store_true", help="install widget deps without package-lock and run npm build")
     args = parser.parse_args()

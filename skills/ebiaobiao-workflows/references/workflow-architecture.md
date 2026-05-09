@@ -11,8 +11,8 @@
 ## Backend Responsibilities
 
 - Store API token server-side only.
-- Validate caller identity from eLink, enterprise WeChat, SSO, or trusted intranet auth.
-- Map business permissions before reading/writing e报表.
+- Validate caller identity from embedded pages, SSO, or trusted intranet auth.
+- Map business permissions before reading/writing 报表.
 - Chunk writes according to Fusion API limits.
 - Retry 429 and transient failures with backoff.
 - Write audit logs and return business-readable results.
@@ -21,7 +21,7 @@
 
 - Render task-specific UI and progress.
 - Call backend APIs, not Fusion API directly.
-- Adapt layout for phone, desktop, and enterprise WeChat embedded windows.
+- Adapt layout for phone, desktop, and embedded windows.
 - Show loading, empty, validation, permission, partial-failure, and success states.
 
 ## Network Guidance

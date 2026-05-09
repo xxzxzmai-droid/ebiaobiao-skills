@@ -1,4 +1,4 @@
 interface:
-  display_name: "e报表Fusion API"
-  short_description: "创建和维护私有化e报表表格、字段、记录和附件"
-  default_prompt: "使用 e报表 Fusion API 技能读写私有化 e报表空间站、表格、字段、记录、附件和节点。"
+  display_name: "报表Fusion API"
+  short_description: "创建和维护报表表格、字段、记录和附件"
+  default_prompt: "使用 报表 Fusion API 技能读写报表空间站、表格、字段、记录、附件和节点。"

@@ -1,11 +1,11 @@
 ---
 name: ebiaobiao-fusion-api
-description: "Build and operate private e报表/vika Fusion API automations. Use when Codex needs to create datasheets or fields, inspect spaces/nodes/views/fields, query records, import or export records, create/update/delete records, upload attachments, validate schemas, write audit/status fields, or automate table-driven reporting against the private e报表 host."
+description: "Build and operate 报表/vika Fusion API automations. Use when Codex needs to create datasheets or fields, inspect spaces/nodes/views/fields, query records, import or export records, create/update/delete records, upload attachments, validate schemas, write audit/status fields, or automate table-driven reporting against a configured host."
 ---
 
-# e报表 Fusion API
+# 报表 Fusion API
 
-Use for local/server automation against private e报表. Translate public examples from `https://vika.cn/fusion/v1` to `https://app.ehv.csg.cn:7886/fusion/v1`.
+Use for local/server automation against the configured 报表 host. Translate public examples to the local `EBIAOBIAO_API_BASE_URL`.
 
 ## Workflow
 

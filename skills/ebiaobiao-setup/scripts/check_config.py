@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate private e报表 development configuration without making network calls."""
+"""Validate report development configuration without making network calls."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ import os
 from pathlib import Path
 
 
-DEFAULT_HOST = "https://app.ehv.csg.cn:7886"
-DEFAULT_BASE = DEFAULT_HOST + "/fusion/v1"
+DEFAULT_HOST = ""
+DEFAULT_BASE = ""
 
 
 def host_configured(host: str, base_url: str) -> bool:
@@ -43,7 +43,7 @@ def collect() -> dict:
     )
     token = os.environ.get("EBIAOBIAO_API_TOKEN") or os.environ.get("VIKA_API_TOKEN")
     host = os.environ.get("EBIAOBIAO_HOST", DEFAULT_HOST).rstrip("/")
-    base_url = os.environ.get("EBIAOBIAO_API_BASE_URL", host + "/fusion/v1").rstrip("/")
+    base_url = (os.environ.get("EBIAOBIAO_API_BASE_URL") or (host + "/fusion/v1" if host else DEFAULT_BASE)).rstrip("/")
     space_id = os.environ.get("EBIAOBIAO_SPACE_ID")
     profile = os.environ.get("EBIAOBIAO_PROFILE", "")
     configured_host = host_configured(host, base_url)
@@ -54,7 +54,7 @@ def collect() -> dict:
     if not space_id:
         issues.append("missing EBIAOBIAO_SPACE_ID; write commands will be blocked")
     if not configured_host:
-        issues.append("EBIAOBIAO_HOST and EBIAOBIAO_API_BASE_URL must use HTTPS")
+        issues.append("missing EBIAOBIAO_HOST or EBIAOBIAO_API_BASE_URL; both must use HTTPS")
     if profile != "dev":
         issues.append("EBIAOBIAO_PROFILE is not dev; write commands will be blocked")
     return {
@@ -72,14 +72,14 @@ def collect() -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Check e报表 local configuration")
+    parser = argparse.ArgumentParser(description="Check report local configuration")
     parser.add_argument("--json", action="store_true", help="print machine-readable JSON")
     args = parser.parse_args()
     result = collect()
     if args.json:
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return
-    print("e报表 configuration")
+    print("report configuration")
     print(f"- env file: {result['env_file'] or '(none)'}")
     print(f"- host: {result['host']}")
     print(f"- api base: {result['api_base_url']}")

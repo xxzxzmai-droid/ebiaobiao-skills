@@ -3,7 +3,7 @@
 Each schema is a dict with `name` (str) and `fields` (list of field dicts).
 Each field has `name`, `type`, and optional `property`.
 
-Schema field types and property formats are calibrated for the e报表 private
+Schema field types and property formats are calibrated for the 报表 configured
 deployment (color is string, dateFormat is enum, Number defaultValue is str,
 Rating icon is emoji slug, etc. — see SPEC.md §10).
 """

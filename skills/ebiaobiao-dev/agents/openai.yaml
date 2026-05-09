@@ -1,4 +1,4 @@
 interface:
-  display_name: "e报表开发总入口"
-  short_description: "路由私有化e报表API、小程序、脚本和工作流开发"
-  default_prompt: "使用 e报表开发总入口判断任务应进入配置、Fusion API、自建小程序、脚本小程序还是自动化工作流。"
+  display_name: "报表开发总入口"
+  short_description: "路由报表API、小程序、脚本和工作流开发"
+  default_prompt: "使用 报表开发总入口判断任务应进入配置、Fusion API、自建小程序、脚本小程序还是自动化工作流。"

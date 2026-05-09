@@ -1,4 +1,4 @@
-# e报表 Configuration
+# 报表 Configuration
 
 ## One-Entry Setup
 
@@ -22,28 +22,28 @@ Use spaces/profiles to switch target spaces or user tokens. `profile import` sav
 
 ## Variables
 
-- `EBIAOBIAO_HOST`: default `https://app.ehv.csg.cn:7886`.
-- `EBIAOBIAO_API_BASE_URL`: default `https://app.ehv.csg.cn:7886/fusion/v1`.
+- `EBIAOBIAO_HOST`: deployment host. Required for reads and writes.
+- `EBIAOBIAO_API_BASE_URL`: Fusion API base URL. If left blank, derive it from `EBIAOBIAO_HOST + /fusion/v1`.
 - `EBIAOBIAO_SPACE_ID`: target development space. Required for writes.
 - `EBIAOBIAO_API_TOKEN`: personal API token. Required for API calls.
 - `VIKA_API_TOKEN`: legacy fallback only.
 - `EBIAOBIAO_PROFILE`: use `dev` to allow direct development-space writes.
-- `EBIAOBIAO_SSL_VERIFY`: set `0` only for the private host when internal certificates break local smoke tests.
+- `EBIAOBIAO_SSL_VERIFY`: set `0` only when local certificate verification blocks development smoke tests.
 
 ## Safety Policy
 
 Read-only commands may run with a token and API base. Write commands must pass all checks:
 
 - `EBIAOBIAO_PROFILE=dev`
-- private host contains `app.ehv.csg.cn:7886`
+- HTTPS host/base URL configured locally
 - token present
 - target `spaceId` present from env or explicit command argument
 
-If any check fails, generate code or dry-run output instead of mutating e报表.
+If any check fails, generate code or dry-run output instead of mutating 报表.
 
 ## Setup Checklist
 
-1. Log in to private e报表.
+1. Log in to the target 报表 environment.
 2. Generate a personal API token from user/developer settings.
 3. Copy the target space ID from the space cockpit or use the spaces API.
 4. Store token and space ID in project-local `.env.local`.

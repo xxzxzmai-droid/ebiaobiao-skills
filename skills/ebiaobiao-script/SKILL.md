@@ -1,11 +1,11 @@
 ---
 name: ebiaobiao-script
-description: "Write and adapt e报表/vika Script mini-programs for in-table automation. Use when Codex needs quick JavaScript scripts inside the Script widget for find/replace, required-field validation, duplicate checks, batch updates, record matching, attachment-to-URL conversion, user prompts, output tables, lodash helpers, fetch calls, or lightweight one-off data processing without building a full widget."
+description: "Write and adapt 报表/vika Script mini-programs for in-table automation. Use when Codex needs quick JavaScript scripts inside the Script widget for find/replace, required-field validation, duplicate checks, batch updates, record matching, attachment-to-URL conversion, user prompts, output tables, lodash helpers, fetch calls, or lightweight one-off data processing without building a full widget."
 ---
 
-# e报表脚本小程序
+# 报表脚本小程序
 
-Use scripts for fast in-table processing when a full Widget project is unnecessary. Scripts run inside the e报表 Script mini-program and use the platform-provided `space`, `input`, `output`, `fetch`, and lodash APIs.
+Use scripts for fast in-table processing when a full Widget project is unnecessary. Scripts run inside the 报表 Script mini-program and use the platform-provided `space`, `input`, `output`, `fetch`, and lodash APIs.
 
 ## When To Choose Script
 

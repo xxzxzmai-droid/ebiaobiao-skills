@@ -58,7 +58,7 @@ def generate_industry_metrics(seed: int = 1) -> List[Dict]:
 
 
 def generate_enterprises(seed: int = 1) -> List[Dict]:
-    """420 = 30 企业 × 14 天。原本 1500 条体量在私有部署 vika 下经常超时。"""
+    """420 = 30 企业 × 14 天。原本 1500 条体量在目标环境 vika 下经常超时。"""
     rng = random.Random(seed)
     today = datetime.date(2026, 5, 9)
     statuses_weighted = ["稳定运行"] * 4 + ["重点跟踪"] * 2 + \

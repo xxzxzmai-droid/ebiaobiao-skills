@@ -1,10 +1,10 @@
 # Agent Instructions
 
-This repository provides e报表 development skills for coding agents.
+This repository provides 报表 development skills for coding agents.
 
 ## Start Here
 
-When a user asks for e报表 work, first read:
+When a user asks for 报表 work, first read:
 
 ```text
 skills/ebiaobiao-dev/SKILL.md
@@ -16,7 +16,7 @@ Then load only the sub-skill needed for the task:
 - Fusion API tables/records/attachments: `skills/ebiaobiao-fusion-api/SKILL.md`
 - Self-built Widget mini-programs: `skills/ebiaobiao-widget/SKILL.md`
 - Script mini-programs: `skills/ebiaobiao-script/SKILL.md`
-- eLink, enterprise WeChat, backend workflows: `skills/ebiaobiao-workflows/SKILL.md`
+- Embedded apps and backend workflows: `skills/ebiaobiao-workflows/SKILL.md`
 
 ## Required Workflow
 

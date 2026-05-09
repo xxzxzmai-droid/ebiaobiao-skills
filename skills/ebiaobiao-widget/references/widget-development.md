@@ -4,7 +4,7 @@
 
 - Self-built widgets are installed under the space's self-built mini-program area.
 - Local development usually uses `widget-cli start`, which serves an HTTPS local bundle.
-- Browsers may require manually allowing the local HTTPS certificate before e报表 can load the local bundle.
+- Browsers may require manually allowing the local HTTPS certificate before 报表 can load the local bundle.
 - Before `widget-cli start` or release, use the full `widget.config.json` shape: `packageId`, `spaceId`, `version`, `entry`, localized `name` and `description`, `icon`, `cover`, `authorName`, `authorIcon`, `authorLink`, `authorEmail`, and `sandbox`.
 - `widget-cli start` fails with `TypeError: The "path" argument must be of type string. Received undefined` when `entry` is missing.
 - The released package fails with `Code: 473` and `小程序发布失败，发布参数不完整` when required author/icon/cover metadata is missing.
@@ -12,12 +12,12 @@
 - `packageId` must be `wpk` plus exactly 10 English letters or digits. Longer values fail late with `Package ID format error`; use a valid placeholder and replace it before release.
 - On first release of a new widget package, `widget-cli release --ci` may still prompt `Release a new widget with Id ... Y/n?`. In automation, pipe an explicit `Y` for new packages and keep the release log.
 - Before release, provide a 64x64 PNG icon and a 16:9 cover image. Reuse the icon for `authorIcon` if no author avatar is available.
-- Private/community deployments can publish with `widget-cli release --uploadHost <host>`.
-- For this environment, use both `--host https://app.ehv.csg.cn:7886` and `--uploadHost https://app.ehv.csg.cn:7886`.
+- Non-public deployments can publish with `widget-cli release --host <host> --uploadHost <host>`.
+- Use `npm run release`; the template release script reads the host from `EBIAOBIAO_HOST`.
 - A self-built widget can only be published/updated by the creator account unless ownership is transferred by the creator or space admin.
 - Pin `@apitable/widget-sdk@1.10.1`, `@apitable/widget-cli@1.3.0`, and React/ReactDOM `18.2.0`. Newer React currently causes peer dependency conflicts with the official SDK.
 - The CLI enables CSS Modules for `.css` imports. Do not use `import './style.css'` with plain `className="app"`; styles will compile but not match the DOM. Use `import styles from './style.css'` and `className={styles.app}`, or wrap selectors in `:global(...)`.
-- e报表/企业微信内嵌窗口 may clip the widget iframe instead of scrolling the page. Set `html`, `body`, and `#root` to `height: 100%; overflow: hidden`, then make the top-level app container `height: 100vh; overflow: auto; -webkit-overflow-scrolling: touch`. Do not rely on page/body scrolling.
+- Embedded windows may clip the widget iframe instead of scrolling the page. Set `html`, `body`, and `#root` to `height: 100%; overflow: hidden`, then make the top-level app container `height: 100vh; overflow: auto; -webkit-overflow-scrolling: touch`. Do not rely on page/body scrolling.
 
 ## SDK Patterns
 
@@ -35,7 +35,7 @@ Check all of these before handoff:
 - 390px narrow embedded window: vertical scrolling works inside the widget, and wide preview tables can be swiped horizontally.
 - 768px width: two-column layout where useful, preview table horizontally scrolls inside its own container instead of overflowing or clipping.
 - 1440px width: tool is dense and scan-friendly, not stretched into a marketing page.
-- Enterprise WeChat embedded window: supports dynamic height/width changes without hiding primary actions.
+- Embedded window: supports dynamic height/width changes without hiding primary actions.
 - Dark theme or host theme variables do not break contrast.
 
 ## Release Checklist
@@ -44,10 +44,10 @@ Check all of these before handoff:
 - `widget.config.json` includes `entry`, `version`, package ID, localized metadata, icon, cover, and author metadata.
 - `package_icon.png` exists.
 - `cover.png` exists.
-- Local preview verified inside e报表.
-- Release command targets private host.
+- Local preview verified inside 报表.
+- Release command targets the configured host.
 - After release, `widget-cli list-release <packageId>` may show package details as `Online` and still fail the release-history section with `Code: 221 参数有误`; treat the package details status as the reliable signal.
-- If Browser cannot attach to an authenticated e报表 window, still run build, bundle scoped-class checks, package status checks, and static viewport screenshots as fallback evidence.
+- If Browser cannot attach to an authenticated 报表 window, still run build, bundle scoped-class checks, package status checks, and static viewport screenshots as fallback evidence.
 - Non-developer mode install verified from widget center when possible.
 
 ## Live Smoke Lessons

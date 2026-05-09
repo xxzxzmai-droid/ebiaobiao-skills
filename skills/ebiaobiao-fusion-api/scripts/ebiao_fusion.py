@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Private e报表 Fusion API CLI with guarded write operations."""
+"""Report Fusion API CLI with guarded write operations."""
 
 from __future__ import annotations
 
@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_HOST = "https://app.ehv.csg.cn:7886"
-DEFAULT_BASE_URL = DEFAULT_HOST + "/fusion/v1"
+DEFAULT_HOST = ""
+DEFAULT_BASE_URL = ""
 WRITE_COMMANDS = {
     "create-datasheet",
     "create-field",
@@ -115,7 +115,8 @@ class Config:
         load_env_local()
         host = args.host or os.environ.get("EBIAOBIAO_HOST") or DEFAULT_HOST
         self.host = host.rstrip("/")
-        self.base_url = (args.base_url or os.environ.get("EBIAOBIAO_API_BASE_URL") or self.host + "/fusion/v1").rstrip("/")
+        fallback_base = self.host + "/fusion/v1" if self.host else DEFAULT_BASE_URL
+        self.base_url = (args.base_url or os.environ.get("EBIAOBIAO_API_BASE_URL") or fallback_base).rstrip("/")
         self.space_id = args.space_id or os.environ.get("EBIAOBIAO_SPACE_ID")
         self.profile = args.profile or os.environ.get("EBIAOBIAO_PROFILE", "")
         self.token, self.token_source = get_token(args.token)
@@ -140,7 +141,7 @@ class Config:
         if self.profile != "dev":
             issues.append("EBIAOBIAO_PROFILE is not dev")
         if not self.host_configured:
-            issues.append("EBIAOBIAO_HOST and EBIAOBIAO_API_BASE_URL must use HTTPS")
+            issues.append("missing EBIAOBIAO_HOST or EBIAOBIAO_API_BASE_URL; both must use HTTPS")
         return {
             "host": self.host,
             "api_base_url": self.base_url,
@@ -165,7 +166,7 @@ class Config:
         if self.profile != "dev":
             raise SystemExit(f"{command} blocked: set EBIAOBIAO_PROFILE=dev for development-space writes")
         if not self.host_configured:
-            raise SystemExit(f"{command} blocked: EBIAOBIAO_HOST and EBIAOBIAO_API_BASE_URL must use HTTPS")
+            raise SystemExit(f"{command} blocked: set EBIAOBIAO_HOST and EBIAOBIAO_API_BASE_URL to HTTPS values")
         if not target_space:
             raise SystemExit(f"{command} blocked: set EBIAOBIAO_SPACE_ID or pass --space-id")
 
@@ -243,7 +244,7 @@ class Client:
 
 def add_common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--token", help="API token; prefer EBIAOBIAO_API_TOKEN")
-    parser.add_argument("--host", help="default: EBIAOBIAO_HOST or private host")
+    parser.add_argument("--host", help="default: EBIAOBIAO_HOST")
     parser.add_argument("--base-url", help="default: EBIAOBIAO_API_BASE_URL or host/fusion/v1")
     parser.add_argument("--space-id", help="target space id; default EBIAOBIAO_SPACE_ID")
     parser.add_argument("--profile", help="default EBIAOBIAO_PROFILE")
@@ -252,7 +253,7 @@ def add_common(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Private e报表 Fusion API CLI")
+    parser = argparse.ArgumentParser(description="Report Fusion API CLI")
     sub = parser.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("config")
     psub = p.add_subparsers(dest="subcmd", required=True)

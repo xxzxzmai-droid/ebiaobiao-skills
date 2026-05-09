@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "entry": "./src/index.tsx",
   "name": {
-    "zh-CN": "e报表业务助手",
-    "en-US": "E-report Assistant"
+    "zh-CN": "报表业务助手",
+    "en-US": "Report Assistant"
   },
   "description": {
     "zh-CN": "面向表格数据校验、预览和批量处理的自建小程序",

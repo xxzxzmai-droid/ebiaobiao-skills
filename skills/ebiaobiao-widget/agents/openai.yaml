@@ -1,4 +1,4 @@
 interface:
-  display_name: "e报表自建小程序"
+  display_name: "报表自建小程序"
   short_description: "开发发布自建Widget小程序并适配手机桌面窗口"
-  default_prompt: "使用 e报表自建小程序技能开发、测试、预览和发布私有化 e报表 Widget 小程序。"
+  default_prompt: "使用 报表自建小程序技能开发、测试、预览和发布报表 Widget 小程序。"

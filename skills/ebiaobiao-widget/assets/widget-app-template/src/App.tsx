@@ -71,8 +71,8 @@ export function App() {
     <main className={styles.app}>
       <section className={styles.topbar}>
         <div>
-          <span className={styles.eyebrow}>e报表业务助手</span>
-          <h1>e报表业务助手</h1>
+          <span className={styles.eyebrow}>报表业务助手</span>
+          <h1>报表业务助手</h1>
           <p>选择视图和字段后预览校验结果，再执行批量处理。</p>
           <div className={styles.badges}>
             <span>权限检查</span>

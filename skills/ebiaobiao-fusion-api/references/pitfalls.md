@@ -1,4 +1,4 @@
-# Fusion API 实战踩坑（私有部署 vika）
+# Fusion API 实战踩坑（目标环境 vika）
 
 `examples/dianli-cockpit/` Phase A 真灌入 ~1300 条种子数据踩到的坑。后来者按这里避开。
 
@@ -78,7 +78,7 @@ timeout = max(120, n_chunks * (5 + sleep_seconds) + 60)
 
 ## 6. 1500 条 enterprise 体量经验性偏大
 
-私有部署 vika 在 1500 条 × 9 字段的 enterprise 表上，列查询和插入都明显变慢。500 条左右是甜点。
+目标环境 vika 在 1500 条 × 9 字段的 enterprise 表上，列查询和插入都明显变慢。500 条左右是甜点。
 
 > 该 demo 把 enterprise 从 50 企业 × 30 天 = 1500 砍到 30 × 14 = 420，跑得稳。
 

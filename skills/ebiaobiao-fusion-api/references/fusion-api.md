@@ -2,8 +2,8 @@
 
 ## Official Boundaries
 
-- Public base URL in official docs: `https://vika.cn/fusion/v1/`.
-- Private e报表 base URL: `https://app.ehv.csg.cn:7886/fusion/v1/`.
+- Public docs show the standard Fusion API shape.
+- Project calls use the locally configured `EBIAOBIAO_API_BASE_URL`.
 - HTTPS is required.
 - Auth header: `Authorization: Bearer {API Token}`.
 - API permissions equal the token owner's UI permissions.
@@ -88,8 +88,8 @@ Update records:
 
 - Discover fields and views first; store field IDs for durable reads and mapping.
 - Use field names for create/update record `fields` maps unless the live API version is verified to support field IDs.
-- Live smoke on private e报表 confirmed that creating records with field IDs returns `400 The format of the fields parameter value is wrong`; retry with field names before debugging token or permissions.
-- Live matrix on the private e报表 host confirmed node search uses the v2 base and field deletion needs the `spaces/{spaceId}` path segment.
+- Live smoke confirmed that creating records with field IDs returns `400 The format of the fields parameter value is wrong`; retry with field names before debugging token or permissions.
+- Live matrix confirmed node search uses the v2 base and field deletion needs the `spaces/{spaceId}` path segment.
 - Checkbox field creation fails with `"icon" is required` unless `property.icon` is supplied.
 - Live work-supervision smoke confirmed MultiSelect record writes accept arrays of option names when using field-name payloads; `cellFormat=string` reads them back as comma-separated text.
 - Checkbox field `property.icon` may be normalized by the server from `white_check_mark` to `✅`; checkbox records may read `true` as `"1"` and false as `"0"` or absent depending on endpoint/format. Treat absent/`0`/false as unchecked.

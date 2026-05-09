@@ -1,4 +1,4 @@
 interface:
-  display_name: "e报表自动化工作流"
-  short_description: "设计eLink企业微信后端网关和定时自动化方案"
-  default_prompt: "使用 e报表自动化工作流技能设计 eLink、企业微信、后端网关、定时任务和 Fusion API 集成。"
+  display_name: "报表自动化工作流"
+  short_description: "设计内嵌页面后端网关和定时自动化方案"
+  default_prompt: "使用 报表自动化工作流技能设计内嵌页面、后端网关、定时任务和 Fusion API 集成。"

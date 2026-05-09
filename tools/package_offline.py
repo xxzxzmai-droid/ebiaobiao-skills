@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a clean offline installer archive for the e报表 skills."""
+"""Build a clean offline installer archive for the 报表 skills."""
 
 from __future__ import annotations
 

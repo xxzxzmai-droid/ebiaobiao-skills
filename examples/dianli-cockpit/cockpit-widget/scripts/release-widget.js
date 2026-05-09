@@ -1,6 +1,6 @@
 const { spawnSync } = require('node:child_process');
 
-const host = (process.env.EBIAOBIAO_HOST || 'https://app.ehv.csg.cn:7886').replace(/\/$/, '');
+const host = (process.env.EBIAOBIAO_HOST || '').replace(/\/$/, '');
 const token = process.env.EBIAOBIAO_API_TOKEN || process.env.VIKA_API_TOKEN || '';
 const confirm = process.argv.includes('--confirm');
 

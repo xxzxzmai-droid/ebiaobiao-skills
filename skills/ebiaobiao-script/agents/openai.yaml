@@ -1,4 +1,4 @@
 interface:
-  display_name: "e报表脚本小程序"
+  display_name: "报表脚本小程序"
   short_description: "编写表内脚本小程序完成校验、替换和批量处理"
-  default_prompt: "使用 e报表脚本小程序技能编写可在维格云脚本小程序里运行的数据处理脚本。"
+  default_prompt: "使用 报表脚本小程序技能编写可在维格云脚本小程序里运行的数据处理脚本。"

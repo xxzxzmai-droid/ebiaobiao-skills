@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One-entry setup and profile manager for private e报表 projects."""
+"""One-entry setup and profile manager for report projects."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ import sys
 from pathlib import Path
 
 
-DEFAULT_HOST = "https://app.ehv.csg.cn:7886"
-DEFAULT_BASE = DEFAULT_HOST + "/fusion/v1"
+DEFAULT_HOST = ""
+DEFAULT_BASE = ""
 SKILL_ROOT = Path(__file__).resolve().parents[2]
 SETUP_ROOT = SKILL_ROOT / "ebiaobiao-setup"
 WIDGET_TEMPLATE = SKILL_ROOT / "ebiaobiao-widget" / "assets" / "widget-app-template"
@@ -56,7 +56,7 @@ def write_env(path: Path, values: dict[str, str]) -> None:
         "EBIAOBIAO_SSL_VERIFY",
     ]
     lines = [
-        "# e报表 private deployment configuration",
+        "# Report platform configuration",
         "# Do not commit this file when it contains a real token.",
         "",
     ]
@@ -107,10 +107,11 @@ def write_example(target: Path) -> None:
 
 def profile_values(args: argparse.Namespace, old: dict[str, str] | None = None) -> dict[str, str]:
     base = dict(old or {})
-    host = args.host or base.get("EBIAOBIAO_HOST") or DEFAULT_HOST
+    host = (args.host or base.get("EBIAOBIAO_HOST") or DEFAULT_HOST).rstrip("/")
+    api_base_url = args.api_base_url or base.get("EBIAOBIAO_API_BASE_URL") or (host + "/fusion/v1" if host else DEFAULT_BASE)
     values = {
-        "EBIAOBIAO_HOST": host.rstrip("/"),
-        "EBIAOBIAO_API_BASE_URL": (args.api_base_url or base.get("EBIAOBIAO_API_BASE_URL") or host.rstrip("/") + "/fusion/v1").rstrip("/"),
+        "EBIAOBIAO_HOST": host,
+        "EBIAOBIAO_API_BASE_URL": api_base_url.rstrip("/"),
         "EBIAOBIAO_SPACE_ID": args.space_id if args.space_id is not None else base.get("EBIAOBIAO_SPACE_ID", ""),
         "EBIAOBIAO_API_TOKEN": args.token if args.token is not None else base.get("EBIAOBIAO_API_TOKEN", ""),
         "EBIAOBIAO_PROFILE": args.write_profile or base.get("EBIAOBIAO_PROFILE") or "dev",
@@ -175,6 +176,8 @@ def maybe_open_missing_config(path: Path, values: dict[str, str], no_open: bool)
     missing = []
     if not values.get("EBIAOBIAO_API_TOKEN"):
         missing.append("EBIAOBIAO_API_TOKEN")
+    if not values.get("EBIAOBIAO_HOST") or not values.get("EBIAOBIAO_API_BASE_URL"):
+        missing.append("EBIAOBIAO_HOST")
     if not values.get("EBIAOBIAO_SPACE_ID"):
         missing.append("EBIAOBIAO_SPACE_ID")
     if not missing:
@@ -278,16 +281,16 @@ def cmd_widget_env(args: argparse.Namespace) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Initialize and switch private e报表 development profiles")
+    parser = argparse.ArgumentParser(description="Initialize and switch report development profiles")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     def add_profile_fields(p: argparse.ArgumentParser) -> None:
-        p.add_argument("--token", help="personal e报表 API token")
+        p.add_argument("--token", help="personal API token")
         p.add_argument("--space-id", help="target space id")
         p.add_argument("--host", default=DEFAULT_HOST)
         p.add_argument("--api-base-url")
         p.add_argument("--write-profile", default="dev", help="EBIAOBIAO_PROFILE value; dev enables guarded writes")
-        p.add_argument("--ssl-verify", choices=["0", "1"], help="0 for private host with internal cert issues")
+        p.add_argument("--ssl-verify", choices=["0", "1"], help="0 when local certificate verification blocks development checks")
         p.add_argument("--no-open", action="store_true", help="do not open config file when token or space id is missing")
 
     p = sub.add_parser("init", help="create .env.local, profile storage, gitignore, and widget starter")
