@@ -45,6 +45,7 @@ def generate_industry_metrics(seed: int = 1) -> List[Dict]:
             for i in INDUSTRIES:
                 base = 1500 * DISTRICT_WEIGHT[d] * INDUSTRY_WEIGHT[i]
                 records.append({
+                    "标题": f"{month_str}·{d}·{i}",  # primary 给 UI 看
                     "月份": month_str,
                     "区域": d,
                     "行业": i,
@@ -80,7 +81,7 @@ def generate_enterprises(seed: int = 1) -> List[Dict]:
         for day_offset in range(-29, 1):
             date = (today + datetime.timedelta(days=day_offset)).strftime("%Y-%m-%d")
             records.append({
-                "企业名称": c["name"],
+                "标题": c["name"],  # vika 主字段名是 标题（不能改），值为企业名
                 "日期": date,
                 "区域": c["district"],
                 "行业": c["industry"],
@@ -113,6 +114,7 @@ def generate_load_curve(seed: int = 1) -> List[Dict]:
             base = 350 * DISTRICT_WEIGHT[d] * diurnal
             load = round(base * rng.uniform(0.90, 1.10), 1)
             records.append({
+                "标题": f"{ts} {d}",  # primary
                 "时间戳": ts,
                 "区域": d,
                 "实时负荷_MW": load,
@@ -140,13 +142,13 @@ def generate_alerts(seed: int = 1) -> List[Dict]:
         d = rng.choice(DISTRICTS)
         atype = rng.choice(ALERT_TYPES)
         records.append({
-            "事件编号": f"AL-{i+1:04d}",
+            "标题": f"AL-{i+1:04d}",  # vika 主字段名是 标题，值为事件编号 AL-XXXX
             "时间": ts,
             "区域": d,
             "等级": levels[i],
             "类型": atype,
-            "标题": f"{d}{atype}指标偏离阈值",
-            "说明": f"仿真机器人检测到{d}{atype}与历史曲线出现偏离，建议纳入电力看经济专题观察。",
+            "说明": (f"【{d}{atype}指标偏离阈值】"
+                    f"仿真机器人检测到{d}{atype}与历史曲线出现偏离，建议纳入电力看经济专题观察。"),
             "状态": statuses[i],
         })
     return records
@@ -160,8 +162,10 @@ def generate_renewable(seed: int = 1) -> List[Dict]:
     records = []
     for d in DISTRICTS:
         for day_offset in range(-29, 1):
+            date = (today + datetime.timedelta(days=day_offset)).strftime("%Y-%m-%d")
             records.append({
-                "日期": (today + datetime.timedelta(days=day_offset)).strftime("%Y-%m-%d"),
+                "标题": f"{date} {d}",  # primary
+                "日期": date,
                 "区域": d,
                 "光伏出力_MW": round(rng.uniform(20, 120), 1),
                 "储能电量_MWh": round(rng.uniform(10, 80), 1),
@@ -197,6 +201,7 @@ def generate_insights(seed: int = 1) -> List[Dict]:
             drop=rng.randint(15, 45), g=rng.randint(20, 80),
         )
         records.append({
+            "标题": f"{d} · {itype}",  # primary
             "时间": ts,
             "区域": d,
             "类型": itype,
@@ -207,18 +212,18 @@ def generate_insights(seed: int = 1) -> List[Dict]:
 
 
 def generate_config() -> List[Dict]:
-    """~12 KV，硬编码不依赖 seed。"""
+    """~12 KV，硬编码不依赖 seed。primary 字段是 标题（vika 自动），值为参数名。"""
     return [
-        {"参数": "红色预警阈值", "值": "80", "说明": "风险指数 ≥ 此值触发红色预警"},
-        {"参数": "橙色预警阈值", "值": "60", "说明": "风险指数 ≥ 此值触发橙色预警"},
-        {"参数": "黄色预警阈值", "值": "40", "说明": "风险指数 ≥ 此值触发黄色预警"},
-        {"参数": "KPI_今日总用电_目标", "值": "30000", "说明": "MWh，对照线"},
-        {"参数": "KPI_平均景气指数_警戒线", "值": "50", "说明": "低于此值变红"},
-        {"参数": "KPI_活跃预警_警戒数", "值": "10", "说明": "超过此数 KPI 卡片闪烁"},
-        {"参数": "演示模式", "值": "on", "说明": "on/off。on 时模拟器后台跑剧本"},
-        {"参数": "更新频率_秒", "值": "10", "说明": "用电曲线 worker 周期"},
-        {"参数": "色板_红色预警", "值": "#FF3D5F", "说明": "前端读，不在 vika options 里"},
-        {"参数": "色板_橙色预警", "值": "#FF6B35", "说明": ""},
-        {"参数": "色板_主背景", "值": "#0A1929", "说明": "驾驶舱底色"},
-        {"参数": "色板_主强调", "值": "#00D9FF", "说明": "霓虹青"},
+        {"标题": "红色预警阈值", "值": "80", "说明": "风险指数 ≥ 此值触发红色预警"},
+        {"标题": "橙色预警阈值", "值": "60", "说明": "风险指数 ≥ 此值触发橙色预警"},
+        {"标题": "黄色预警阈值", "值": "40", "说明": "风险指数 ≥ 此值触发黄色预警"},
+        {"标题": "KPI_今日总用电_目标", "值": "30000", "说明": "MWh，对照线"},
+        {"标题": "KPI_平均景气指数_警戒线", "值": "50", "说明": "低于此值变红"},
+        {"标题": "KPI_活跃预警_警戒数", "值": "10", "说明": "超过此数 KPI 卡片闪烁"},
+        {"标题": "演示模式", "值": "on", "说明": "on/off。on 时模拟器后台跑剧本"},
+        {"标题": "更新频率_秒", "值": "10", "说明": "用电曲线 worker 周期"},
+        {"标题": "色板_红色预警", "值": "#FF3D5F", "说明": "前端读，不在 vika options 里"},
+        {"标题": "色板_橙色预警", "值": "#FF6B35", "说明": ""},
+        {"标题": "色板_主背景", "值": "#0A1929", "说明": "驾驶舱底色"},
+        {"标题": "色板_主强调", "值": "#00D9FF", "说明": "霓虹青"},
     ]

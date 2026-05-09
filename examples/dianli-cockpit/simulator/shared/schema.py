@@ -90,8 +90,7 @@ ALERT = {
          "property": {"options": _options(ALERT_LEVEL_COLOR)}},
         {"name": "类型", "type": "SingleSelect",
          "property": {"options": _options_from_list(ALERT_TYPES, color="gray")}},
-        {"name": "标题", "type": "Text"},
-        {"name": "说明", "type": "Text"},
+        {"name": "说明", "type": "Text"},  # 描述文字（vika 自动 标题 字段值用作 AL-XXXX 事件编号）
         {"name": "状态", "type": "SingleSelect",
          "property": {"options": _options(ALERT_STATUS_COLOR)}},
     ],

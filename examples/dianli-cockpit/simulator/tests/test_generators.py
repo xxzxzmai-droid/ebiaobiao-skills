@@ -39,7 +39,8 @@ class TestEnterprises(unittest.TestCase):
 
     def test_unique_companies(self):
         rec = G.generate_enterprises(seed=1)
-        self.assertEqual(len({r["企业名称"] for r in rec}), 50)
+        # 主字段是 标题（vika auto-primary），值为企业名
+        self.assertEqual(len({r["标题"] for r in rec}), 50)
 
 
 class TestLoadCurve(unittest.TestCase):
@@ -66,7 +67,8 @@ class TestAlerts(unittest.TestCase):
 
     def test_event_codes_unique_and_formatted(self):
         rec = G.generate_alerts(seed=1)
-        codes = [r["事件编号"] for r in rec]
+        # 主字段是 标题（vika auto-primary），值为 AL-XXXX
+        codes = [r["标题"] for r in rec]
         self.assertEqual(len(set(codes)), len(codes))
         for c in codes:
             self.assertTrue(c.startswith("AL-"))
@@ -94,7 +96,8 @@ class TestInsights(unittest.TestCase):
 class TestConfig(unittest.TestCase):
     def test_kv_pairs(self):
         rec = G.generate_config()
-        keys = {r["参数"] for r in rec}
+        # 主字段是 标题（vika auto-primary），值为参数名
+        keys = {r["标题"] for r in rec}
         self.assertIn("红色预警阈值", keys)
         self.assertIn("橙色预警阈值", keys)
         self.assertIn("黄色预警阈值", keys)

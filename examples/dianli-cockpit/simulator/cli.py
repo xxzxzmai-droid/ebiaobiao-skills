@@ -22,17 +22,17 @@ SEEDERS = [
     (TABLE_NAMES["industry"], generators.generate_industry_metrics,
      ["月份", "区域", "行业"]),
     (TABLE_NAMES["enterprise"], generators.generate_enterprises,
-     ["企业名称", "日期"]),
+     ["标题", "日期"]),  # vika primary is 标题（值为企业名）
     (TABLE_NAMES["load_curve"], generators.generate_load_curve,
      ["时间戳", "区域"]),
     (TABLE_NAMES["alert"], generators.generate_alerts,
-     ["事件编号"]),
+     ["标题"]),  # vika primary is 标题（值为 AL-XXXX 事件编号）
     (TABLE_NAMES["renewable"], generators.generate_renewable,
      ["日期", "区域"]),
     (TABLE_NAMES["insight"], generators.generate_insights,
      ["时间", "区域", "类型"]),
     (TABLE_NAMES["config"], generators.generate_config,
-     ["参数"]),
+     ["标题"]),  # vika primary is 标题（值为参数名）
 ]
 
 
