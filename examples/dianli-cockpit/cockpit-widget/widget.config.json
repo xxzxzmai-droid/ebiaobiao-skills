@@ -1,0 +1,21 @@
+{
+  "packageId": "wpkReplace001",
+  "spaceId": "${EBIAOBIAO_SPACE_ID}",
+  "version": "0.1.0",
+  "entry": "./src/index.tsx",
+  "name": {
+    "zh-CN": "电力看经济驾驶舱",
+    "en-US": "Power-Economy Cockpit"
+  },
+  "description": {
+    "zh-CN": "惠州市电力看经济实时驾驶舱 · 多端自适应",
+    "en-US": "Huizhou Power-Economy Realtime Cockpit · Multi-end adaptive"
+  },
+  "icon": "./package_icon.png",
+  "cover": "./cover.png",
+  "authorName": "maimai",
+  "authorIcon": "./package_icon.png",
+  "authorLink": "https://github.com/xxzxzmai-droid/ebiaobiao-skills",
+  "authorEmail": "noreply@example.com",
+  "sandbox": false
+}
