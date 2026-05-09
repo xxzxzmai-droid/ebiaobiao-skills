@@ -8,11 +8,13 @@ interface AlertStreamProps {
   data: Array<Record<string, unknown>>;
   selectedDistrict?: string | null;
   limit?: number;
+  /** 点击预警条目时回调（传 recordId） */
+  onSelectAlert?: (recordId: string) => void;
 }
 
-/** 实时预警事件流。红色 entry 脉动闪烁。 */
+/** 实时预警事件流。红色 entry 脉动闪烁。点击打开状态切换抽屉。 */
 export const AlertStream: React.FC<AlertStreamProps> = ({
-  data, selectedDistrict, limit = 30,
+  data, selectedDistrict, limit = 30, onSelectAlert,
 }) => {
   const filtered = useMemo(() => {
     let arr = data;
@@ -50,8 +52,10 @@ export const AlertStream: React.FC<AlertStreamProps> = ({
           const level = String(r['等级'] || '黄色');
           const isRed = level === '红色';
           const code = String(r['标题'] || '').slice(0, 12);    // AL-XXXX
+          const recId = String(r['__id'] || '');
           return (
-            <div key={String(r['__id']) || i}
+            <div key={recId || i}
+                 onClick={onSelectAlert && recId ? () => onSelectAlert(recId) : undefined}
                  style={{
                    padding: '8px 10px',
                    borderRadius: 6,
@@ -59,7 +63,17 @@ export const AlertStream: React.FC<AlertStreamProps> = ({
                    background: `${colorOf(ALERT_LEVEL_COLOR[level])}0d`,
                    display: 'flex', flexDirection: 'column', gap: 4,
                    animation: isRed ? 'redPulse 2s ease-in-out infinite' : undefined,
-                 }}>
+                   cursor: onSelectAlert ? 'pointer' : 'default',
+                   transition: 'transform 0.15s ease, border-color 0.15s ease',
+                 }}
+                 onMouseEnter={onSelectAlert ? (e) => {
+                   (e.currentTarget as HTMLDivElement).style.borderColor = colorOf(ALERT_LEVEL_COLOR[level]);
+                   (e.currentTarget as HTMLDivElement).style.transform = 'translateX(-2px)';
+                 } : undefined}
+                 onMouseLeave={onSelectAlert ? (e) => {
+                   (e.currentTarget as HTMLDivElement).style.borderColor = `${colorOf(ALERT_LEVEL_COLOR[level])}55`;
+                   (e.currentTarget as HTMLDivElement).style.transform = 'none';
+                 } : undefined}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Pill label={level} color={ALERT_LEVEL_COLOR[level]} size="sm" />
                 <span style={{ fontSize: 11, color: theme.textSecondary,

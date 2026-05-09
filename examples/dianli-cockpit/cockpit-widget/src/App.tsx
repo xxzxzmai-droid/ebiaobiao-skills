@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useResponsive } from './hooks/useResponsive';
 import { useDistrictFilter } from './hooks/useDistrictFilter';
 import { useCockpitData } from './hooks/useCockpitData';
@@ -13,12 +13,31 @@ import { IndustryDonut } from './components/IndustryDonut';
 import { AlertStream } from './components/AlertStream';
 import { EnterpriseTop10 } from './components/EnterpriseTop10';
 import { InsightTicker } from './components/InsightTicker';
+import { AlertStatusEditor } from './components/AlertStatusEditor';
 
 export function App() {
   const { isMobile, isBigScreen } = useResponsive();
   const filter = useDistrictFilter();
-  const { ready, industry, enterprise, loadCurve, alert, insight, config } = useCockpitData();
+  const { ready, industry, enterprise, loadCurve, alert, insight, config, datasheets } = useCockpitData();
   const configKV = useConfigKV(config);
+
+  // 乐观更新：alert 状态本地覆盖（recordId → newStatus）
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, string>>({});
+  const [editingAlertId, setEditingAlertId] = useState<string | null>(null);
+
+  // alert 数据应用本地 overrides（视觉先变）
+  const alertWithOverrides = useMemo(() => {
+    if (!Object.keys(statusOverrides).length) return alert;
+    return alert.map((r) => {
+      const id = String(r['__id'] || '');
+      const override = statusOverrides[id];
+      return override ? { ...r, '状态': override } : r;
+    });
+  }, [alert, statusOverrides]);
+
+  const editingAlert = editingAlertId
+    ? alert.find((r) => String(r['__id']) === editingAlertId)
+    : null;
 
   // 区域用电热力（归一化）
   const districtIntensity = useMemo(() => {
@@ -56,7 +75,7 @@ export function App() {
       <KpiRow
         loadCurve={loadCurve}
         industry={industry}
-        alerts={alert}
+        alerts={alertWithOverrides}
         enterprises={enterprise}
         configKV={configKV}
       />
@@ -64,11 +83,30 @@ export function App() {
         industry={industry}
         loadCurve={loadCurve}
         enterprises={enterprise}
-        alerts={alert}
+        alerts={alertWithOverrides}
         districtIntensity={districtIntensity}
         filter={filter}
+        onSelectAlert={setEditingAlertId}
       />
       <InsightTicker data={insight} />
+
+      {editingAlert && (
+        <AlertStatusEditor
+          datasheet={datasheets.alert}
+          recordId={editingAlertId!}
+          currentStatus={String(editingAlert['状态'] || '处理中')}
+          onClose={() => setEditingAlertId(null)}
+          onLocalUpdate={(newStatus) => {
+            setStatusOverrides((prev) => ({ ...prev, [editingAlertId!]: newStatus }));
+          }}
+          onRollback={(original) => {
+            setStatusOverrides((prev) => {
+              const { [editingAlertId!]: _, ...rest } = prev;
+              return rest;
+            });
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -80,10 +118,11 @@ interface LayoutProps {
   alerts: Array<Record<string, unknown>>;
   districtIntensity: Record<string, number>;
   filter: ReturnType<typeof useDistrictFilter>;
+  onSelectAlert?: (recordId: string) => void;
 }
 
 const BigScreenLayout: React.FC<LayoutProps> = ({
-  industry, loadCurve, enterprises, alerts, districtIntensity, filter,
+  industry, loadCurve, enterprises, alerts, districtIntensity, filter, onSelectAlert,
 }) => (
   <div style={{ flex: 1, padding: '0 16px 12px', display: 'grid',
                 gridTemplateRows: '1fr 1fr', gap: 12, overflow: 'hidden' }}>
@@ -94,7 +133,7 @@ const BigScreenLayout: React.FC<LayoutProps> = ({
                          onSelect={filter.setDistrict} /></Panel>
       <Panel><LoadCurveChart data={loadCurve}
                               selectedDistrict={filter.district} /></Panel>
-      <Panel><AlertStream data={alerts} selectedDistrict={filter.district} /></Panel>
+      <Panel><AlertStream data={alerts} selectedDistrict={filter.district} onSelectAlert={onSelectAlert} /></Panel>
     </div>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.4fr',
                   gap: 12, minHeight: 0 }}>
@@ -109,7 +148,7 @@ const BigScreenLayout: React.FC<LayoutProps> = ({
 );
 
 const CompactLayout: React.FC<LayoutProps> = ({
-  industry, loadCurve, enterprises, alerts, districtIntensity, filter,
+  industry, loadCurve, enterprises, alerts, districtIntensity, filter, onSelectAlert,
 }) => (
   <div style={{ flex: 1, padding: '0 12px 12px', display: 'grid',
                 gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'auto 1fr 1fr',
@@ -132,7 +171,7 @@ const CompactLayout: React.FC<LayoutProps> = ({
 );
 
 const MobileLayout: React.FC<LayoutProps> = ({
-  industry, loadCurve, enterprises, alerts, districtIntensity, filter,
+  industry, loadCurve, enterprises, alerts, districtIntensity, filter, onSelectAlert,
 }) => (
   <div style={{ flex: 1, padding: '0 12px 12px', display: 'flex',
                 flexDirection: 'column', gap: 10, overflow: 'auto' }}>
