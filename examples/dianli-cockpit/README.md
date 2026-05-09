@@ -13,8 +13,8 @@
 ```bash
 cd ~/projects/ebiaobiao-skills/examples/dianli-cockpit
 
-# 跑测试（不连真实 vika）
-python -m pytest simulator/tests -v
+# 跑测试（不连真实 vika，stdlib unittest）
+python -m unittest discover -s simulator/tests -v
 
 # 干跑：打印将要发起的 API 调用，不写
 python -m simulator bootstrap --dry-run

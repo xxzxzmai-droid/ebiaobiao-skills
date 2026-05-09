@@ -1,1 +1,2 @@
-pytest>=7.0
+# 运行时 stdlib only — 零外部依赖。
+# 测试用 stdlib unittest:  python -m unittest discover -s simulator/tests
