@@ -30,10 +30,10 @@ class VikaError(RuntimeError):
 Runner = Callable[[List[str]], dict]
 
 
-def _subprocess_runner(args: List[str]) -> dict:
+def _subprocess_runner(args: List[str], *, timeout: int = 120) -> dict:
     """Default runner: shell out to ebiao_fusion.py, parse its JSON stdout."""
     cmd = ["python3", EBIAO_FUSION_SCRIPT, *args]
-    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
     if proc.returncode != 0:
         raise VikaError(
             code="subprocess",
@@ -65,8 +65,13 @@ class VikaClient:
     def __init__(self, runner: Optional[Runner] = None):
         self._runner = runner or _subprocess_runner
 
-    def _call(self, args: List[str]) -> dict:
-        resp = self._runner(args)
+    def _call(self, args: List[str], *, timeout: int = 120) -> dict:
+        # Custom-timeout path: pass timeout to subprocess runner if it accepts it
+        try:
+            resp = self._runner(args, timeout=timeout)
+        except TypeError:
+            # mock runners in tests don't accept timeout kwarg
+            resp = self._runner(args)
         if not resp.get("success"):
             raise VikaError(
                 code=resp.get("code", "?"),
@@ -132,27 +137,39 @@ class VikaClient:
             page += 1
         return out
 
-    def create_records(self, dst_id: str, records: list) -> list:
-        # CLI: create-records <datasheet_id> <records_json>
-        # records_json 是 [{fields: {...}}, ...]
-        out = []
-        for chunk in _chunks(records, self.BATCH_SIZE):
-            payload = [{"fields": r} for r in chunk]
-            data = self._call(["create-records", dst_id,
-                               json.dumps(payload, ensure_ascii=False)])
-            out.extend(data.get("records", []))
-        return out
+    def create_records(self, dst_id: str, records: list, *,
+                       sleep_seconds: float = 0.3) -> list:
+        """Create records. CLI auto-chunks by 10 internally; we pass full payload.
 
-    def update_records(self, dst_id: str, records: list) -> list:
-        # CLI: update-records <datasheet_id> <records_json>
-        # records_json 是 [{recordId: ..., fields: {...}}, ...]
-        out = []
-        for chunk in _chunks(records, self.BATCH_SIZE):
-            data = self._call(["update-records", dst_id,
-                               json.dumps(chunk, ensure_ascii=False)])
-            out.extend(data.get("records", []))
-        return out
+        For large batches (>50), single CLI call may take minutes — we
+        compute a generous timeout based on record count.
+        """
+        if not records:
+            return []
+        # 单次传全量给 CLI，让它自己 chunk + sleep
+        payload = [{"fields": r} for r in records]
+        n_chunks = (len(records) + self.BATCH_SIZE - 1) // self.BATCH_SIZE
+        timeout = max(60, int(n_chunks * (1.5 + sleep_seconds) + 30))
+        args = ["create-records", dst_id, json.dumps(payload, ensure_ascii=False),
+                "--sleep", str(sleep_seconds)]
+        data = self._call(args, timeout=timeout)
+        return data.get("records", [])
 
-    def delete_records(self, dst_id: str, record_ids: list) -> None:
+    def update_records(self, dst_id: str, records: list, *,
+                       sleep_seconds: float = 0.3) -> list:
+        if not records:
+            return []
+        n_chunks = (len(records) + self.BATCH_SIZE - 1) // self.BATCH_SIZE
+        timeout = max(60, int(n_chunks * (1.5 + sleep_seconds) + 30))
+        args = ["update-records", dst_id, json.dumps(records, ensure_ascii=False),
+                "--sleep", str(sleep_seconds)]
+        data = self._call(args, timeout=timeout)
+        return data.get("records", [])
+
+    def delete_records(self, dst_id: str, record_ids: list, *,
+                       sleep_seconds: float = 0.3) -> None:
+        if not record_ids:
+            return
+        # delete-records CLI uses positional comma-list; CLI may not auto-chunk this one
         for chunk in _chunks(record_ids, self.BATCH_SIZE):
             self._call(["delete-records", dst_id, ",".join(chunk)])

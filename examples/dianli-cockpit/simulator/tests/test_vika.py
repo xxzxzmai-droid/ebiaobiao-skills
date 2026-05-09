@@ -63,29 +63,45 @@ class TestCreateField(unittest.TestCase):
 
 
 class TestRecordsBatch(unittest.TestCase):
-    def test_create_chunks_to_10(self):
+    """Client passes full payload to CLI in ONE call (CLI auto-chunks internally
+    + supports --sleep for rate limiting). Only delete_records still chunks
+    locally because CLI's delete signature uses comma-separated IDs."""
+
+    def test_create_passes_full_payload_with_sleep(self):
         runner = MagicMock(return_value={"success": True, "data": {"records": []}})
         c = VikaClient(runner=runner)
         records = [{"区域": "惠城区"} for _ in range(25)]
         c.create_records("dstABC", records)
-        self.assertEqual(runner.call_count, 3)  # 10 / 10 / 5
-        first = runner.call_args_list[0][0][0]
-        self.assertEqual(first[0], "create-records")
-        self.assertEqual(first[1], "dstABC")
-        payload = json.loads(first[2])
-        self.assertIsInstance(payload, list)
+        self.assertEqual(runner.call_count, 1)
+        args = runner.call_args[0][0]
+        self.assertEqual(args[0], "create-records")
+        self.assertEqual(args[1], "dstABC")
+        payload = json.loads(args[2])
+        self.assertEqual(len(payload), 25)
         self.assertEqual(payload[0], {"fields": {"区域": "惠城区"}})
+        self.assertIn("--sleep", args)
 
-    def test_update_chunks_to_10(self):
+    def test_update_passes_full_payload_with_sleep(self):
         runner = MagicMock(return_value={"success": True, "data": {"records": []}})
         c = VikaClient(runner=runner)
-        c.update_records("dstABC", [{"recordId": f"r{i}", "fields": {"x": 1}} for i in range(15)])
-        self.assertEqual(runner.call_count, 2)  # 10 / 5
+        c.update_records("dstABC",
+                         [{"recordId": f"r{i}", "fields": {"x": 1}} for i in range(15)])
+        self.assertEqual(runner.call_count, 1)
+        args = runner.call_args[0][0]
+        self.assertIn("--sleep", args)
+
+    def test_create_empty_is_noop(self):
+        runner = MagicMock()
+        c = VikaClient(runner=runner)
+        result = c.create_records("dstABC", [])
+        runner.assert_not_called()
+        self.assertEqual(result, [])
 
     def test_delete_chunks_to_10(self):
         runner = MagicMock(return_value={"success": True, "data": {}})
         c = VikaClient(runner=runner)
         c.delete_records("dstABC", [f"r{i}" for i in range(12)])
+        # delete-records CLI doesn't auto-chunk → client still does it
         self.assertEqual(runner.call_count, 2)
 
 
