@@ -35,12 +35,12 @@ class TestIndustryMetrics(unittest.TestCase):
 
 class TestEnterprises(unittest.TestCase):
     def test_count(self):
-        self.assertEqual(len(G.generate_enterprises(seed=1)), 1500)
+        # 30 企业 × 14 天 = 420（原本 1500 太大易超时）
+        self.assertEqual(len(G.generate_enterprises(seed=1)), 420)
 
     def test_unique_companies(self):
         rec = G.generate_enterprises(seed=1)
-        # 主字段是 标题（vika auto-primary），值为企业名
-        self.assertEqual(len({r["标题"] for r in rec}), 50)
+        self.assertEqual(len({r["标题"] for r in rec}), 30)
 
 
 class TestLoadCurve(unittest.TestCase):

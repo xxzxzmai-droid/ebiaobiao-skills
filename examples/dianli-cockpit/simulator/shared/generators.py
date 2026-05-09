@@ -58,14 +58,14 @@ def generate_industry_metrics(seed: int = 1) -> List[Dict]:
 
 
 def generate_enterprises(seed: int = 1) -> List[Dict]:
-    """1500 = 50 企业 × 30 天。"""
+    """420 = 30 企业 × 14 天。原本 1500 条体量在私有部署 vika 下经常超时。"""
     rng = random.Random(seed)
     today = datetime.date(2026, 5, 9)
     statuses_weighted = ["稳定运行"] * 4 + ["重点跟踪"] * 2 + \
                         ["异常监测"] + ["停产"]
 
     companies = []
-    for i in range(50):
+    for i in range(30):
         d = rng.choice(DISTRICTS)
         ind = rng.choice(INDUSTRIES)
         companies.append({
@@ -78,7 +78,7 @@ def generate_enterprises(seed: int = 1) -> List[Dict]:
 
     records = []
     for c in companies:
-        for day_offset in range(-29, 1):
+        for day_offset in range(-13, 1):
             date = (today + datetime.timedelta(days=day_offset)).strftime("%Y-%m-%d")
             records.append({
                 "标题": c["name"],  # vika 主字段名是 标题（不能改），值为企业名
