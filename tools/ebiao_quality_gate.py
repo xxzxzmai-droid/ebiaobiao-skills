@@ -65,8 +65,29 @@ def add(checks: list[Check], name: str, fn) -> None:
 
 
 def git_files() -> list[Path]:
-    result = run(["git", "ls-files"], check=True)
-    return [ROOT / line for line in result.stdout.splitlines() if line.strip()]
+    try:
+        result = run(["git", "ls-files"], check=True)
+        files = [ROOT / line for line in result.stdout.splitlines() if line.strip()]
+        if files:
+            return files
+    except Exception:
+        pass
+
+    excluded_dirs = {".git", "node_modules", "dist", "__pycache__", "widgets", "docs"}
+    excluded_suffixes = {".pyc", ".pyo", ".png", ".jpg", ".jpeg", ".gif", ".ico"}
+    files: list[Path] = []
+    for path in ROOT.rglob("*"):
+        rel = path.relative_to(ROOT)
+        if not path.is_file():
+            continue
+        if any(part in excluded_dirs for part in rel.parts):
+            continue
+        if path.suffix.lower() in excluded_suffixes:
+            continue
+        if path.name == "package-lock.json":
+            continue
+        files.append(path)
+    return sorted(files)
 
 
 def read_text(path: Path) -> str:

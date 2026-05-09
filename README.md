@@ -46,6 +46,40 @@ cd ebiaobiao-skills
 .\install.ps1 -Target <skills-dir> -Force
 ```
 
+## 离线安装
+
+适用于不能访问 GitHub 的环境，也适用于统信 UOS、麒麟等 Linux 桌面系统。
+
+在可访问仓库的电脑上生成离线包：
+
+```bash
+python3 tools/package_offline.py
+```
+
+生成文件位于 `dist/`：
+
+- `ebiaobiao-skills-offline.zip`
+- `ebiaobiao-skills-offline.tar.gz`
+
+把其中一个文件拷贝到目标电脑后解压。
+
+macOS / Linux / 统信 UOS:
+
+```bash
+cd ebiaobiao-skills-offline
+chmod +x install.sh
+./install.sh --force
+```
+
+Windows PowerShell:
+
+```powershell
+cd ebiaobiao-skills-offline
+.\install.ps1 -Force
+```
+
+离线包只负责安装 skills。后续如果要构建或发布 Widget 小程序，目标电脑还需要 Node.js/npm，并能访问 npm 官方源或单位内网 npm 镜像。
+
 ## 初始化
 
 进入业务项目目录后运行：
