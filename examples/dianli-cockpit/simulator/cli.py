@@ -43,6 +43,18 @@ def cmd_bootstrap(args, client: VikaClient):
     for name, dst in dst_ids.items():
         print(f"    {name:30} {dst}")
 
+    if args.wipe:
+        print("\n→ ⚠ --wipe: 清空全部表的所有 records...")
+        for name, dst in dst_ids.items():
+            try:
+                all_recs = client.list_all_records(dst, fields=[])
+                ids = [r["recordId"] for r in all_recs]
+                if ids:
+                    client.delete_records(dst, ids)
+                    print(f"  {name:30} 已删 {len(ids)} 条")
+            except Exception as e:  # noqa: BLE001
+                print(f"  {name:30} 清空失败: {e}")
+
     print("\n→ 灌入种子数据 (幂等)...")
     total_new = 0
     for table_name, gen_func, key_fields in SEEDERS:
@@ -74,6 +86,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                     help="skip records whose key already exists (default behavior)")
     bs.add_argument("--seed", type=int, default=1,
                     help="random seed (default 1)")
+    bs.add_argument("--wipe", action="store_true",
+                    help="DESTRUCTIVE: delete all records in target tables before seeding")
 
     args = p.parse_args(argv)
     logging.basicConfig(level=logging.INFO,

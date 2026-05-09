@@ -122,7 +122,8 @@ class VikaClient:
         if filter_formula: args += ["--filter-by-formula", filter_formula]
         if view_id: args += ["--view-id", view_id]
         if fields: args += ["--fields", ",".join(fields)]
-        return self._call(args)
+        # large tables need more time to query
+        return self._call(args, timeout=180)
 
     def list_all_records(self, dst_id: str, **kwargs) -> list:
         out = []
@@ -146,10 +147,8 @@ class VikaClient:
         """
         if not records:
             return []
-        # 单次传全量给 CLI，让它自己 chunk + sleep
         payload = [{"fields": r} for r in records]
-        n_chunks = (len(records) + self.BATCH_SIZE - 1) // self.BATCH_SIZE
-        timeout = max(60, int(n_chunks * (1.5 + sleep_seconds) + 30))
+        timeout = self._batch_timeout(len(records), sleep_seconds)
         args = ["create-records", dst_id, json.dumps(payload, ensure_ascii=False),
                 "--sleep", str(sleep_seconds)]
         data = self._call(args, timeout=timeout)
@@ -159,12 +158,20 @@ class VikaClient:
                        sleep_seconds: float = 0.3) -> list:
         if not records:
             return []
-        n_chunks = (len(records) + self.BATCH_SIZE - 1) // self.BATCH_SIZE
-        timeout = max(60, int(n_chunks * (1.5 + sleep_seconds) + 30))
+        timeout = self._batch_timeout(len(records), sleep_seconds)
         args = ["update-records", dst_id, json.dumps(records, ensure_ascii=False),
                 "--sleep", str(sleep_seconds)]
         data = self._call(args, timeout=timeout)
         return data.get("records", [])
+
+    def _batch_timeout(self, n_records: int, sleep_seconds: float) -> int:
+        """Generous timeout: assumes ~5s per chunk under load + 60s buffer.
+
+        For 1500 records (150 chunks): ~810s = 13.5 min.
+        For 504 records (51 chunks): ~315s = 5 min.
+        """
+        n_chunks = (n_records + self.BATCH_SIZE - 1) // self.BATCH_SIZE
+        return max(120, int(n_chunks * (5 + sleep_seconds) + 60))
 
     def delete_records(self, dst_id: str, record_ids: list, *,
                        sleep_seconds: float = 0.3) -> None:
