@@ -26,7 +26,7 @@
 | 数据时间粒度 | D 混合（行业月度 / 重点企业日度 / 用电曲线时度 / 预警秒级流） |
 | 地理 + 行业 | C 全惠州 7 区 × 6 行业 |
 | 屏幕布局 | 4 行经典：顶栏 / KPI 行 / 地图+曲线+预警三栏 / donut+Top10 双栏 + 底栏 ticker |
-| Schema 重建 | C UI 清空老 8 张 + API 新建 7 张，复用"电力看经济_*"前缀 |
+| Schema 重建 | 新建 7 张『电力驾驶舱_*』表，老『电力看经济_*』8 张保留不动 |
 | 交互深度 | C 深度交互（含 widget 写回预警状态，欢迎 Race Condition） |
 | 数据剧情感 | B 预编排剧情 + 背景扰动（6 段 90 秒剧本） |
 | 工程方案 | 中量旗舰：放进 `examples/dianli-cockpit/`，多线程模拟器，ECharts 图表，每个坑反哺 skill |
@@ -83,7 +83,7 @@ ScriptWidget 兜底（贴 vika Script 小部件，手动跑） ─────�
 
 ## 3. 数据 Schema（7 张新表）
 
-> ⚠ UI 清空老 `电力看经济_*` 8 张表后再建。所有字段类型按 e报表私有部署实测格式（color 字符串 / icon slug / dateFormat 枚举 / Number defaultValue 字符串 / Formula 不带 valueType 等）。
+> 用 `电力驾驶舱_*` 前缀，跟老 `电力看经济_*` 8 张表共存不冲突。所有字段类型按 e报表私有部署实测格式（color 字符串 / icon slug / dateFormat 枚举 / Number defaultValue 字符串 / Formula 不带 valueType 等）。
 
 ### 3.1 区域配色（7 区固定映射）
 
@@ -108,7 +108,7 @@ ScriptWidget 兜底（贴 vika Script 小部件，手动跑） ─────�
 | 纺织食品 | green |
 | 新材料 | purple |
 
-### 3.3 表 ① `电力看经济_行业指标` （504 条 = 12 月 × 7 区 × 6 行业）
+### 3.3 表 ① `电力驾驶舱_行业指标` （504 条 = 12 月 × 7 区 × 6 行业）
 
 | 字段 | 类型 | property |
 |---|---|---|
@@ -121,7 +121,7 @@ ScriptWidget 兜底（贴 vika Script 小部件，手动跑） ─────�
 | 景气指数 | Number | `precision=1`（0-100） |
 | 产出指数 | Number | `precision=1`（0-100） |
 
-### 3.4 表 ② `电力看经济_重点企业` （~1500 条 = 50 企业 × 30 天）
+### 3.4 表 ② `电力驾驶舱_重点企业` （~1500 条 = 50 企业 × 30 天）
 
 | 字段 | 类型 |
 |---|---|
@@ -134,7 +134,7 @@ ScriptWidget 兜底（贴 vika Script 小部件，手动跑） ─────�
 | 风险指数 | Number `precision=1` |
 | 状态 | SingleSelect: 稳定运行=green / 重点跟踪=blue / 异常监测=orange / 停产=red |
 
-### 3.5 表 ③ `电力看经济_用电曲线` （168 条滑窗 = 7 区 × 24 小时）
+### 3.5 表 ③ `电力驾驶舱_用电曲线` （168 条滑窗 = 7 区 × 24 小时）
 
 | 字段 | 类型 |
 |---|---|
@@ -147,7 +147,7 @@ ScriptWidget 兜底（贴 vika Script 小部件，手动跑） ─────�
 
 模拟器每 10s 更新"当前小时"该区记录的负荷字段；每整点 rotate 滑窗（drop -23h, append 新小时）。
 
-### 3.6 表 ④ `电力看经济_预警事件` （~80 初始 + 流式增长）
+### 3.6 表 ④ `电力驾驶舱_预警事件` （~80 初始 + 流式增长）
 
 | 字段 | 类型 |
 |---|---|
@@ -162,7 +162,7 @@ ScriptWidget 兜底（贴 vika Script 小部件，手动跑） ─────�
 
 **Widget 唯一允许写回的字段是 `状态`。**
 
-### 3.7 表 ⑤ `电力看经济_新能源充电` （210 条 = 7 区 × 30 天）
+### 3.7 表 ⑤ `电力驾驶舱_新能源充电` （210 条 = 7 区 × 30 天）
 
 | 字段 | 类型 |
 |---|---|
@@ -172,7 +172,7 @@ ScriptWidget 兜底（贴 vika Script 小部件，手动跑） ─────�
 | 光伏出力_MW / 储能电量_MWh / 充电次数 | Number |
 | 类型 | SingleSelect: 光伏=yellow / 储能=blue / 充电=green |
 
-### 3.8 表 ⑥ `电力看经济_机器人洞察` （~30 初始 + 剧情触发增长）
+### 3.8 表 ⑥ `电力驾驶舱_机器人洞察` （~30 初始 + 剧情触发增长）
 
 | 字段 | 类型 |
 |---|---|
@@ -183,7 +183,7 @@ ScriptWidget 兜底（贴 vika Script 小部件，手动跑） ─────�
 | 洞察内容 | Text（≥100 字描述） |
 | 置信分 | Rating（icon=star, max=5） |
 
-### 3.9 表 ⑦ `电力看经济_配置参数` （~15 条 KV）
+### 3.9 表 ⑦ `电力驾驶舱_配置参数` （~15 条 KV）
 
 | 字段 | 类型 |
 |---|---|
@@ -492,7 +492,7 @@ if __name__ == '__main__':
 ### 6.2 vika 自动化配置（UI 一次性）
 
 README 写明步骤：
-1. 进 `电力看经济_预警事件` 表
+1. 进 `电力驾驶舱_预警事件` 表
 2. 顶部 "+" → 自动化
 3. 触发器：记录满足条件 → `等级 = 红色`
 4. 动作：发送网络请求 → `POST http://<本机 LAN IP>:8765/alert`
@@ -512,7 +512,7 @@ script-widgets/
 
 ### 7.2 `batch-handle-alerts.js` 关键逻辑
 
-把 `电力看经济_预警事件` 中所有 `状态=已纳入监测` 且 `时间 < now-7d` 的批量改 `已闭环`。带二次确认（`input.buttonsAsync`）。代码 ~50 行，参考 skill 的 `script generate bulk-update` 模板。
+把 `电力驾驶舱_预警事件` 中所有 `状态=已纳入监测` 且 `时间 < now-7d` 的批量改 `已闭环`。带二次确认（`input.buttonsAsync`）。代码 ~50 行，参考 skill 的 `script generate bulk-update` 模板。
 
 ## 8. 工程化
 
@@ -522,7 +522,7 @@ script-widgets/
 
 ### 8.2 构建顺序（spec 后的 plan 会展开）
 
-1. UI 清空老 8 张 `电力看经济_*`（用户手动）
+1. ~~UI 清空老 8 张~~（取消，用 `电力驾驶舱_*` 新前缀避开冲突）
 2. Fusion CLI 跑 schema 创建 + 种子灌入（~3 分钟）
 3. cockpit-widget 脚手架 + npm install + 写代码 + 本地 dev
 4. simulator 写 + smoke run
@@ -552,8 +552,7 @@ script-widgets/
 `examples/dianli-cockpit/README.md` 写清"30 秒跑起来"：
 
 ```bash
-# 1. 在 e报表 UI 清空老 电力看经济_* 8 张表
-# 2. 项目目录 = examples/dianli-cockpit
+# 1. 项目目录 = examples/dianli-cockpit
 cd examples/dianli-cockpit
 cp ../../path-to-env-template .env.local
 # 填 token + spaceId
@@ -571,7 +570,7 @@ npm install
 npm start    # https://localhost:9000/widget_bundle.js
 
 # 6. 在 e报表 UI 任意数据表 → 小部件 → 开发模式 → 输入上面 URL
-# 7. 在"电力看经济_预警事件"表配自动化触发 webhook（README 内有图示步骤）
+# 7. 在"电力驾驶舱_预警事件"表配自动化触发 webhook（README 内有图示步骤）
 ```
 
 ## 8.6 推荐 MVP 顺序（实施计划展开时参考）
