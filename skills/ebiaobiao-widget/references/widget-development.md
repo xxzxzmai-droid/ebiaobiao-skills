@@ -31,16 +31,17 @@ Fix — pick ONE pattern:
 - `"sandbox": true` (recommended): no prefix, plain `import './style.css'` + `className="phone-frame"` works. Widget runs in `/widget-stage?widgetId=...` (separate iframe), which is what apitable expects for typical React widgets.
 - `"sandbox": false` + CSS Modules: `import styles from './style.css'` and `className={styles['phone-frame']}`, OR wrap selectors in `:global(...)`. Only choose this path if the widget specifically needs to manipulate parent DOM.
 
-### G3. `min-height: 100vh` traps in widget panel mode
+### G3. Layout in widget panels — use the App Shell pattern
 
-Widget panels are small iframes (≈280px wide on the right side panel, or floating expanded panels at variable size). They are NOT a phone viewport. CSS that assumes mobile (`min-height: 100vh`, `overflow: hidden` on body, `position: fixed` for tab bars) clips content and disables scrolling.
+**SUPERSEDED by G6 / the App Shell Layout pattern.** Earlier guidance here ("use `body { overflow-y: auto }` and `position: sticky` for tab bars") fails in two ways: short content leaves the tab bar floating in the middle of the visible area, and long content gets clipped/unreachable. Both because the apitable host iframe wrapper has its OWN `overflow: hidden` at a height the widget didn't pick, so body-scroll and document-relative sticky both target the wrong element.
 
-Fix:
-- Use `min-height: 100%` instead of `100vh` on top-level containers.
-- Do NOT put `overflow: hidden` on `body` / `#root`. Allow `body { overflow-y: auto; overflow-x: hidden; }`.
-- For sticky bottom bars use `position: sticky; bottom: 0;` not `position: fixed;`.
-- Pages with a sticky tab bar need ~70–80px bottom padding so content does not slide under it.
-- Verify scrolling in a fixed 390×520 viewport, not just full-page screenshots.
+The correct pattern is documented in `references/layout-app-shell.md` and is also summarized as G6 in `SKILL.md`. In one sentence:
+
+> `html, body { height: 100%; overflow: hidden }` + `#root` is a flex column of `height: 100%` whose middle child (`.page-area`) is `flex: 1; min-height: 0; overflow-y: auto` and whose chrome (tabs, action bars) is `flex-shrink: 0` in normal flex flow.
+
+This is the same pattern Slack/Gmail/Linear use. Use it from day one. The 4 CSS gotchas (host wrapper has `overflow: hidden`, `flex: 1` needs `min-height: 0`, `position: sticky` is unreliable in nested iframes, `100vh` targets the wrong viewport) are all explained in detail in `references/layout-app-shell.md`.
+
+The old advice — `min-height: 100%`, body scroll, `position: sticky` for tab bars, ~80px bottom padding for tab clearance — was WordDeck's first attempt. It did not survive content that exceeded the viewport. Do not use that pattern in new widgets.
 
 ### G4. SSO redirect breaks naive "logged in" URL checks
 
@@ -83,10 +84,8 @@ Fix:
 - A self-built widget can only be published/updated by the creator account unless ownership is transferred by the creator or space admin.
 - Pin `@apitable/widget-sdk@1.10.1`, `@apitable/widget-cli@1.3.0`, and React/ReactDOM `18.2.0`. Newer React currently causes peer dependency conflicts with the official SDK.
 - With `sandbox: false` the CLI prefixes every CSS class with the packageId (see G2). Either set `sandbox: true` (no prefix; recommended), or use CSS Modules (`import styles from './style.css'` + `className={styles.app}`) or `:global(...)` selectors. Do NOT mix `sandbox: false` with plain `import './style.css'` + `className="app"`.
-- Embedded windows clip the widget iframe instead of scrolling the page. The two viable patterns:
-  1. Sandbox=true / panel widgets: use `min-height: 100%` (NOT `100vh`), let `body` scroll naturally (`overflow-y: auto`), use `position: sticky; bottom: 0;` for action bars (see G3).
-  2. Sandbox=false / embedded full-iframe: set `html`, `body`, and `#root` to `height: 100%; overflow: hidden`, then make the top-level app container `height: 100vh; overflow: auto; -webkit-overflow-scrolling: touch`.
-  Do not mix the two patterns or rely on page/body scrolling outside the iframe.
+- Embedded windows clip the widget iframe instead of scrolling the page. Use the App Shell Layout pattern (G6 in SKILL.md, full docs in `references/layout-app-shell.md`): `html, body { height: 100%; overflow: hidden }`; `#root` is a flex column of `height: 100%` with a single scrolling middle (`.page-area`) and chrome via `flex-shrink: 0`. This works the same way for sandbox=true and sandbox=false, panel and full-iframe.
+  Earlier guidance ("sandbox=true → body scroll + sticky tab bar"; "sandbox=false → `height: 100vh; overflow: auto` on top app container") fails for short OR long content in apitable hosts — do not use those patterns. See `references/layout-app-shell.md` for why and what to do instead.
 
 ## SDK Patterns
 
@@ -115,7 +114,7 @@ Check all of these before handoff:
 - `widget.config.json` includes `entry`, `version`, package ID, localized metadata, icon, cover, and author metadata.
 - `package_icon.png` exists.
 - `cover.png` exists.
-- No `min-height: 100vh` or `overflow: hidden` on root containers (G3).
+- Apply the App Shell Layout pattern (G6 / `references/layout-app-shell.md`): no `min-height: 100vh`, no `flex: 1 0 auto`, no `position: sticky` on chrome elements; the scroll viewport is the page-area (or page-internal `.r-body`-style middle), and tabs / action bars use `flex-shrink: 0`. Verify with the checklist in that file (especially: long content scrolls; tabs at visible bottom regardless of content length).
 - Local preview verified inside 报表.
 - Release command targets the configured host.
 - First release of a packageId: use `npm run release:confirm`, then grep output for `Successful create widgetPackage from server`. If that line is absent the package was NOT registered, regardless of any `successful release` output (G1).
@@ -137,6 +136,7 @@ Check all of these before handoff:
 - For select updates, prefer resolving option IDs from `useFields(viewId).property.options` at runtime; fall back to option names only when the field options cannot be read.
 - WordDeck release: `npm run release` with placeholder `wpkReplace001` printed `successful release` but the widget never appeared in the space — bundle was uploaded, package was never registered. Required setting a unique `wpkWdMaiMai01` and switching to `release:confirm`. The `Successful create widgetPackage from server` log line is the only reliable confirmation (G1).
 - WordDeck CSS regression: with `sandbox: false`, source class `.phone-frame` was rewritten to `.wpkWdMaiMai01phone-frame` in the bundle but JSX still used `className="phone-frame"`. Widget rendered unstyled. Switching to `sandbox: true` fixed it without touching JSX (G2).
-- WordDeck panel clipping: `min-height: 100vh` + `overflow: hidden` made the bottom tab bar unreachable in the right-side panel iframe. Replaced with `min-height: 100%`, `body { overflow-y: auto }`, and `position: sticky; bottom: 0;` for the tab bar (G3).
+- WordDeck panel clipping (round 1): `min-height: 100vh` + `overflow: hidden` made the bottom tab bar unreachable in the right-side panel iframe. First attempt replaced with `min-height: 100%`, `body { overflow-y: auto }`, and `position: sticky; bottom: 0;` for the tab bar — this fixed long content but caused the tab bar to float in the middle of the visible area on short content.
+- WordDeck panel clipping (round 2 / FINAL — v0.3.1): the body-scroll + sticky pattern fundamentally breaks because apitable's iframe wrapper has its own `overflow: hidden` at a host-controlled height. Migrated to the App Shell Layout pattern: `html, body { height: 100%; overflow: hidden }`, `#root` is a flex column of `height: 100%` with `.page-area` as the single scrolling middle (`flex: 1; min-height: 0; overflow-y: auto`) and tabs / action bars in normal flex flow with `flex-shrink: 0`. Works for short and long content across panel/expanded/fullscreen sizes. Reveal page has its own bottom action bar — same pattern scoped to the page (`.r-body` is the inner scroll middle, `.r-rate` is `flex-shrink: 0`). Verified via static `tests/layout-smoke.html` + `tests/layout-smoke.mjs` (16/16 assertions across 3 viewport sizes × short/long content × tabs+reveal). See G6 in SKILL.md and `references/layout-app-shell.md`.
 - WordDeck Playwright auth: `!url.includes('/login')` returned true on the external SSO `qrConnect` URL and the script raced past the QR scan. Fix is to gate on the configured host (from `EBIAOBIAO_HOST`) AND exclude `qrConnect` and `/sso/` (G4).
 - WordDeck dstId injection: `window.WORDDECK_DSTIDS` from the host page never reached the iframe. v0.1 hardcoded IDs in `dst-config.ts`; v1.0 should use `useSettingsButton` + `useFields` (G5).

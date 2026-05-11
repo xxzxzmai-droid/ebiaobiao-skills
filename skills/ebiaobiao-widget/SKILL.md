@@ -7,6 +7,84 @@ description: "Develop, preview, test, and publish 报表 self-built widget mini-
 
 Use for 报表 "小程序" unless the user explicitly means another mini-program platform. These are vika self-built widgets inside the 报表 container.
 
+## App Shell Layout (REQUIRED PATTERN — required for ALL widgets)
+
+The apitable host wraps each widget in a fixed-height iframe with `overflow: hidden`. Body-level scrolling does NOT work. Sticky positioning relative to the document does NOT reliably hit the visible bottom of the widget area.
+
+This is the same pattern Slack/Gmail/Linear/etc use for `header + content + footer`: a flex column whose middle child is the SOLE scroll viewport. Do this even if you don't think you need it — content grows, viewports shrink, and any other pattern produces "tab bar in the middle of empty space" or "content clipped, unreachable" bugs.
+
+**Required architecture:**
+
+```css
+html, body { margin: 0; height: 100%; overflow: hidden; }
+#root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+/* Wrapper chain — every inner wrapper between #root and the scrolling
+ * middle must propagate `flex: 1; min-height: 0; overflow: hidden`.
+ * `min-height: 0` is the critical CSS gotcha — without it, flex children
+ * cannot shrink below their content size and the scroll viewport cannot
+ * constrain. */
+.outer-wrapper, .inner-wrapper {
+  display: flex; flex-direction: column;
+  flex: 1; min-height: 0; overflow: hidden;
+}
+/* The ONE scrolling region — the visible content area. */
+.scroll-area {
+  flex: 1; min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+/* Chrome (header, footer, tabs, action bars). flex-shrink: 0 keeps them
+ * at their natural height; they sit at the column ends. NEVER use
+ * position: sticky or fixed for these — they break silently in nested
+ * iframes. */
+.tabs, .action-bar, .toolbar { flex-shrink: 0; }
+```
+
+**Sub-pattern — page with its own bottom action bar (e.g. a Reveal / Detail page with rating buttons):**
+
+A page that has its own bottom-pinned controls (separate from the global tab bar) follows the same pattern scoped to itself. The page becomes a flex column inside the scrolling page area, with its own internal scrolling middle:
+
+```css
+.detail-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;       /* fill the parent page area */
+  overflow: hidden;
+}
+.detail-hero  { flex-shrink: 0; }
+.detail-body  { flex: 1; min-height: 0; overflow-y: auto; }
+.detail-actions { flex-shrink: 0; /* rating / submit buttons */ }
+```
+
+When this sub-pattern is active, the OUTER `.page-area` does not scroll for this page (the inner `.detail-body` does). That's fine — `height: 100%` makes the page exactly fit the page area, so the outer scroll has nothing to scroll.
+
+**The 4 CSS gotchas that have caused recurring bugs:**
+
+1. **Apitable's host wrapper has `overflow: hidden` at a host-controlled height.** You cannot rely on window/body scroll. The scroll viewport MUST be inside your widget — typically `.page-area`.
+
+2. **`flex: 1` alone is not enough.** Inner flex children need `min-height: 0` to shrink. Without it, `flex: 1` resolves to `flex: 1 1 auto` where `auto = content size`, so a tall content child blows the parent past the viewport instead of allowing the scrolling middle to constrain.
+
+3. **`position: sticky` is unreliable in apitable widgets.** Sticky elements stick to the nearest SCROLLING ancestor — but if your scroll container is several wrappers deep and any ancestor has `overflow: hidden`, sticky breaks silently. Use flex layout instead (header at top, scrolling middle, footer at bottom — all in a flex column).
+
+4. **`min-height: 100vh` is wrong inside the widget.** `100vh` = the host page's viewport, NOT your widget's iframe area. Use `height: 100%` against the apitable wrapper (which is itself sized by the host). Then your widget exactly fills the widget area, whatever size it is (panel ~280px, expanded ~600px, fullscreen ~1080px).
+
+**Verification checklist (run after every change):**
+
+- [ ] `grep -rn "position: sticky" src/` → no matches in chrome / tab / footer styles
+- [ ] `grep -rn "100vh\|100dvh" src/` → only in optional desktop-only chrome (rare)
+- [ ] `grep -rn "flex: 1 0 auto" src/` → no matches (use `flex: 1; min-height: 0`)
+- [ ] In dev, resize the widget panel to 3 sizes (panel ~280, expanded ~600, fullscreen ~1080). Tabs / action bars must be at the visible bottom in all sizes.
+- [ ] Force content > viewport height. Page must scroll inside `.page-area` (or the page's own scrolling middle). Tabs stay at bottom (do NOT scroll away).
+- [ ] Force content < viewport height. Tabs still at bottom (no gap below).
+- [ ] Headless smoke check (optional): use `tests/layout-smoke.html` + `tests/layout-smoke.mjs` from the WordDeck widget as a template. It loads the actual CSS files and asserts tab/action-bar position + scroll reachability across 3 viewports × short/long content.
+
 ## 已知坑点 (Production Gotchas)
 
 Real production bugs hit during the WordDeck release. Read these BEFORE first release — every one of them prints `successful release` while silently leaving the widget broken.
@@ -53,12 +131,7 @@ With `sandbox: true`, the prefix is empty and classes render as-is. The widget r
 
 **Why:** Widget panels are NOT phones. They are small iframes (~280px wide on the right side panel, or floating panels at variable size). CSS that assumes a mobile viewport (`100vh`, `overflow:hidden` on body, `position:fixed` for tab bars) traps content inside an unscrollable iframe.
 
-**Fix:**
-- Use `min-height: 100%` instead of `100vh` on top-level containers.
-- Do NOT put `overflow: hidden` on `body` / `#root` / `.app-root`. Allow `body { overflow-y: auto; overflow-x: hidden; }`.
-- For sticky bars, prefer `position: sticky; bottom: 0;` over `position: fixed;`.
-- Pages with a sticky tab bar need ~70–80px bottom padding so content does not slide under it.
-- Verify scrolling in a fixed 390×520 viewport — full-page screenshots can hide the clipping.
+**Fix:** Apply the App Shell Layout pattern at the top of this file. NOT `100vh`, NOT body scroll, NOT sticky for chrome — flex column with `min-height: 0` and a scrolling middle. See also G6.
 
 ### 4. SSO redirect breaks naive "logged in" detection
 
@@ -89,6 +162,24 @@ Use Playwright `launchPersistentContext` with a profile dir so the QR-scan sessi
 - **v0.1 (smoke / single-tenant):** embed dstIds directly in code (e.g. `dst-config.ts` returns hardcoded IDs). Keep them out of the public repo via a `*.local.ts` file + `.gitignore`.
 - **v1.0 (production / multi-tenant):** use the widget settings panel — `useSettingsButton(...)` + `useFields(...)` to let users pick datasheets, then persist with `useCloudStorage`.
 
+### 6. Sticky tab bar / floating action bar bugs (the recurring layout bug)
+
+**Symptom A (short content):** BottomTabs (or action bar) appears in the MIDDLE of the visible widget area with empty white space below it.
+**Symptom B (long content):** Content at the bottom of a page is clipped/unreachable; user CANNOT scroll to it (e.g. a 排行榜 / leaderboard section sitting below the visible area).
+
+**Why:** Patterns like `#root { overflow-y: auto; min-height: 100vh }` + `.tabs { position: sticky; bottom: 0 }` LOOK right but break in apitable hosts. The host's iframe wrapper has its own `overflow: hidden` at a height the widget didn't pick, so:
+- Sticky tabs stick to the wrong bottom (the wrapper bottom, not the iframe-visible bottom).
+- The scroll container is the wrong element, so dragging on the apparent bottom of the iframe does not actually scroll.
+
+**Fix:** Apply the App Shell Layout pattern from the top of this file. The single fix that resolves both symptoms is:
+- `html, body { height: 100%; overflow: hidden }` — kill body scroll
+- `#root` → flex column, `height: 100%`, `overflow: hidden`
+- Wrapper chain → `flex: 1; min-height: 0; overflow: hidden`
+- The ONE scrolling region: `.page-area { flex: 1; min-height: 0; overflow-y: auto }`
+- Tabs / action bars: `flex-shrink: 0` (NOT sticky, NOT fixed)
+
+See `references/layout-app-shell.md` for the full pattern, the Reveal-style sub-pattern (page with its own bottom action bar), and copy-pasteable CSS.
+
 ## Workflow
 
 1. Validate setup and follow `ebiaobiao-dev` Creation Flow.
@@ -98,9 +189,10 @@ Use Playwright `launchPersistentContext` with a profile dir so the QR-scan sessi
    - Set `sandbox: true` unless you have a specific reason for `sandbox: false` (and have refactored to CSS Modules / `:global(...)`).
 4. Keep tokens out of frontend code; privileged Fusion API calls belong in a backend.
 5. Build compact operational UI: mapping controls, summary, preview, action bar, progress, result log.
+   **Apply the App Shell Layout pattern from the top section of this file** when laying out the widget. Use it from day one — retrofitting is painful and the bug has hit WordDeck 5+ times.
 6. Persist mappings with `useCloudStorage`; for datasheet selection use `useSettingsButton` + `useFields`.
 7. Check permissions before mutation.
-8. Verify 390px, 768px, 1440px, and narrow embedded windows. **Avoid `100vh` / `overflow:hidden` on root containers** (see Gotcha 3). The release script reads `EBIAOBIAO_HOST` and `EBIAOBIAO_API_TOKEN` from local configuration.
+8. Verify 390px, 768px, 1440px, AND the 3 apitable widget panel sizes (~280px panel, ~600px expanded, ~1080px fullscreen). Run the layout verification checklist from the App Shell Layout section. Avoid `100vh` / `overflow:hidden` on root containers (Gotchas 3 & 6). The release script reads `EBIAOBIAO_HOST` and `EBIAOBIAO_API_TOKEN` from local configuration.
 9. **Publish with `npm run release:confirm`** (NOT `npm run release`) for the first release of any new packageId. The `:confirm` variant pipes `Y\n` to the create-package prompt. Grep output for `Successful create widgetPackage from server` to confirm registration. If that line is missing, the package was NOT created in the space.
 10. Final report: widget name, package ID, version, status, target space, table/view, key UI, responsive checks, container/browser verification.
 
@@ -119,9 +211,10 @@ npm run release           # subsequent releases of an already-registered package
 - Support phone, desktop, and embedded windows.
 - Show loading, empty, permission-denied, validation-error, progress, success, and partial-failure states.
 - Prefer official widget components: `FieldPicker`, `ViewPicker`, `CellValue`, buttons, theme variables.
-- Do not assume mobile viewport in CSS — widget panels are small iframes (see Gotcha 3).
+- Do not assume mobile viewport in CSS — widget panels are small iframes (see Gotchas 3 & 6, and the App Shell Layout section).
 
 ## References
 
+- `references/layout-app-shell.md`: the App Shell Layout pattern in full — copy-pasteable CSS templates for the standard `tabs + page-area` layout, the `Reveal`-style page with its own bottom action bar, the 4 CSS gotchas in detail, and the verification checklist + headless smoke template.
 - `references/widget-development.md`: release rules, responsive checklist, live smoke lessons.
 - `assets/widget-app-template/`: responsive React starter (uses `:global(...)` + CSS Modules pattern).
