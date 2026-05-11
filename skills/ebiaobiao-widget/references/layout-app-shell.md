@@ -189,6 +189,114 @@ Sticky sticks to the nearest SCROLLING ancestor. Inside an apitable iframe sever
 
 **Right answer:** `height: 100%` (or `min-height: 100%`) against the apitable wrapper. Optional: use `100vh` only for explicitly expand/fullscreen-only chrome that has guards.
 
+## Mobile viewport — the "blank area below tabs" host limitation
+
+### What the user sees
+
+On a mobile phone (iPhone, Android), the widget renders correctly: `#root` exactly fills its iframe, `.tabs` sits flush at the iframe's bottom edge. **But the iframe itself is shorter than the device viewport.** Below the iframe boundary is empty apitable host UI (page header, watermark, footer chrome). The visual effect: tabs appear in the middle of the screen with blank host space below.
+
+This is **NOT a widget CSS bug** — `#root: height: 100%` correctly fills the iframe area. The iframe is host-sized.
+
+### Why it happens
+
+The apitable host on mobile embeds widgets in iframes sized by host layout rules, not the device viewport. The host page has:
+
+1. A top navigation / breadcrumb bar
+2. The widget iframe (host-sized — often ~60-70% of the visible area)
+3. Page footer / watermarks below the iframe
+
+There is no public API to make the iframe fill the device viewport in non-fullscreen mode.
+
+### What you can try (WordDeck v0.4.0 attempted, in order of effectiveness)
+
+**1. Auto-trigger fullscreen on mobile (RECOMMENDED — works on hosts that support it).**
+
+```ts
+import { useViewport } from '@apitable/widget-sdk';
+
+function useAutoFullscreenOnMobile() {
+  const { isFullscreen, toggleFullscreen } = useViewport();
+  const triedRef = useRef(false);
+  useEffect(() => {
+    if (triedRef.current) return;
+    triedRef.current = true;
+    if (sessionStorage.getItem('autofs-tried') === '1') return; // one-shot
+    if (window.innerWidth > 480) return;                         // mobile only
+    if (isFullscreen) return;
+    try {
+      toggleFullscreen(true);
+      sessionStorage.setItem('autofs-tried', '1');
+    } catch {}
+  }, []);
+}
+```
+
+When fullscreen is active, the apitable host gives the widget the full device viewport. Make this one-shot per page load (sessionStorage) so the user can explicitly exit fullscreen without your code re-toggling it.
+
+**2. Promote `#root` to `100dvh` when fullscreen is active.**
+
+```ts
+useEffect(() => {
+  const root = document.getElementById('root');
+  if (!root) return;
+  root.style.height = isFullscreen ? '100dvh' : '100%';
+  if (!CSS.supports('height: 100dvh')) root.style.height = isFullscreen ? '100vh' : '100%';
+}, [isFullscreen]);
+```
+
+`100dvh` accounts for mobile Safari's URL bar collapsing. `100vh` is the safari < 15.4 fallback.
+
+**3. postMessage resize nudge (mostly cosmetic — most hosts ignore it).**
+
+```ts
+window.parent.postMessage({ type: 'resize', height: window.innerHeight }, '*');
+```
+
+Some bespoke embed wrappers listen for this. Public apitable hosts do not. Cheap to try, fine to leave in.
+
+**4. Visual transition — soften the iframe boundary.**
+
+```css
+.tabs {
+  box-shadow: inset 0 -24px 0 0 rgba(238, 242, 255, 0.6);
+}
+```
+
+A subtle gradient or solid block at the tabs' bottom edge makes the boundary between widget and host less abrupt even when the iframe doesn't fill the screen.
+
+**5. Provide a "全屏" affordance.**
+
+A floating top-right chip that calls `toggleFullscreen()` lets the user opt into fullscreen if auto-trigger didn't take, or if they previously exited.
+
+```tsx
+function FullscreenChip() {
+  const { isFullscreen, toggleFullscreen } = useViewport();
+  return (
+    <button onClick={() => toggleFullscreen()}>
+      {isFullscreen ? '⤡ 退出' : '⤢ 全屏'}
+    </button>
+  );
+}
+```
+
+### The documented limitation
+
+> **On mobile, apitable embeds widgets in iframes sized by the host page. Even in fullscreen mode the iframe may not fill the entire device viewport on every host. The best UX is to:**
+>
+> 1. Auto-trigger fullscreen on first mobile load (with a sessionStorage guard so it doesn't loop).
+> 2. Provide a visible 全屏 chip so users can re-trigger fullscreen at will.
+> 3. Promote `#root` to `100dvh` while in fullscreen mode so the widget uses the full device viewport.
+> 4. Visually soften the tabs' bottom boundary with a subtle gradient or shadow so the "blank area below tabs" is less jarring.
+> 5. Accept that on hosts where fullscreen still doesn't fill the device viewport, the blank area exists and is **outside the widget's control**.
+
+### Verification — quick mobile checklist
+
+- [ ] Open the widget on a phone (or Chrome devtools mobile emulation @ 375×812).
+- [ ] On first load, fullscreen should auto-toggle (sessionStorage flag prevents re-trigger).
+- [ ] After exiting fullscreen, the chip should be visible top-right.
+- [ ] Tabs should sit at the iframe's bottom in BOTH normal and fullscreen modes.
+- [ ] In fullscreen mode, the widget should use the full device viewport (no host UI below tabs).
+
 ## Verification checklist
 
 Run after every CSS / layout change:
