@@ -1,0 +1,26 @@
+{
+  "packageId": "wpkMatAssist1",
+  "spaceId": "spcjCWa40legH",
+  "version": "0.1.0",
+  "entry": "./src/widget.tsx",
+  "name": {
+    "zh-CN": "物资智能助手",
+    "en-US": "Materials AI Assistant"
+  },
+  "icon": "./package_icon.png",
+  "cover": "./cover.png",
+  "authorName": "maimai",
+  "authorIcon": "./author_icon.png",
+  "sandbox": true,
+  "description": {
+    "zh-CN": "把物资管理 Dify 智能体嵌入 e报表空间站：库存/台账/领用问答、按需查询、内联图表。在小程序设置里填写 Dify 地址与 token 即可使用。",
+    "en-US": "Embeds the materials Dify chatflow assistant inside an e-report space: stock/ledger/requisition Q&A with inline charts. Configure the Dify URL and token in widget settings."
+  },
+  "runtimeEnv": [
+    "mobile",
+    "desktop"
+  ],
+  "installEnv": [
+    "panel"
+  ]
+}

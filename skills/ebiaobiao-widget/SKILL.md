@@ -180,6 +180,42 @@ Use Playwright `launchPersistentContext` with a profile dir so the QR-scan sessi
 
 See `references/layout-app-shell.md` for the full pattern, the Reveal-style sub-pattern (page with its own bottom action bar), and copy-pasteable CSS.
 
+### 7. `release` prompts for VERSION before the create-package prompt — naive `printf 'Y\n'` answers the wrong prompt
+
+**Symptom:** `printf 'Y\n' | widget-cli release ...` (the literal `release:confirm`) dies with `npm error Invalid version: Y` / `npm version Y` → `Y: command not found`. Nothing is uploaded.
+
+**Why:** `widget-cli release` asks **two** questions, in this order:
+1. `release version [0.1.1]:` — it auto-bumps and asks you to confirm/override the version.
+2. `Release a new widget with Id: wpkXXX Y/n?` — the create-package prompt (only for a new packageId).
+
+A piped `Y` lands on prompt **1**, so widget-cli runs `npm version Y` and aborts. The `:confirm` one-liner only works if the version prompt is suppressed.
+
+**Fix — pass the version as a flag, pipe `Y` only for create-package:**
+```bash
+printf 'Y\n' | widget-cli release --version 0.1.0 \
+  --host "$EBIAOBIAO_HOST" --uploadHost "$EBIAOBIAO_HOST" --token "$EBIAOBIAO_API_TOKEN"
+```
+- `--version <v>` (or `-v`) skips prompt 1 entirely.
+- Do **NOT** add `--ci` for a *new* packageId: `--ci` suppresses BOTH prompts, which silently skips create-package (Gotcha 1). Use `--ci` only for *subsequent* releases of an already-registered package.
+- Self-signed host (internal e报表): export `NODE_TLS_REJECT_UNAUTHORIZED=0` before the release, or widget-cli's upload fails on the cert.
+- Success looks like: `Successful create widgetPackage from server` → `Compile Succeed` → `successful release widget wpkXXX@<v>`.
+
+## Recipe: embed a Dify chatflow (or any external chat / web app) as a widget
+
+A common ask is "把我们的 Dify 智能体做成 e报表小程序". The widget is just a thin React shell that **iframes** the Dify chatbot URL; the chatflow itself stays in Dify. This is ~120 lines (one component + app-shell CSS). Full copyable source: `examples/dify-assistant-widget/` (component, settings panel, cert-hint bar, app-shell CSS, release script).
+
+**The one hard gate — self-signed cert / mixed content (read before promising it works):**
+The widget runs inside e报表 (https) in the user's browser. To show the chat, that browser must load the Dify URL **directly** — the widget has no server-side proxy. If Dify is an internal IP with a self-signed cert (the common case, e.g. `https://10.x.x.x:5030`), the browser **silently** blocks the iframe (cert-untrusted + mixed-content) — blank panel, and `iframe` fires **no** `onError`, so you cannot detect it in JS.
+- **Clean fix:** expose Dify behind a valid cert at a browser-reachable URL.
+- **Workaround (internal/self-signed):** the user opens the Dify origin once in a new tab and clicks "proceed (unsafe)" to register a cert exception, then reloads the widget. Build this into the UI: a hint bar with an `<a target="_blank" href={difyOrigin}>` link + a "reload" button (bump an iframe `key`). A desktop-app Go client sidesteps all this with a same-origin reverse proxy; a widget cannot.
+- A native React chat UI calling the Dify REST API instead of an iframe does **not** help — same origin still has the cert/mixed-content/CORS wall.
+
+**Config, not hardcode:** never bake the Dify URL/token into source (offline-first rule). Store them with `useCloudStorage('difyBaseUrl' | 'difyToken' | ...)` (space-shared, admin sets once) and expose a settings panel via `useSettingsButton`. Build the src as `` `${base}/chatbot/${token}` `` (standard embed; identity defaults to the chatflow's built-in demo identity) or `` `${base}/chat/${token}?mat_role=...&mat_org_id=...` `` (plaintext identity params). `/chatbot/` needs gzip+base64-encoded param values; `/chat/` accepts plaintext — prefer `/chat/` when you must pass identity from a widget (no backend to sign a token).
+
+**Layout:** app-shell flex column — fixed header + optional cert-hint bar (`flex-shrink: 0`) and the `<iframe className="...">` filling the `flex: 1; min-height: 0` middle. Never `100vh`/sticky (Gotchas 3 & 6).
+
+**Publish:** new packageId → Gotcha 7 (`--version` flag + pipe `Y`, no `--ci`). Working example shipped to production: `wpkMatAssist1` (物资智能助手), space `spcjCWa40legH`.
+
 ## Workflow
 
 1. Validate setup and follow `ebiaobiao-dev` Creation Flow.
@@ -193,7 +229,7 @@ See `references/layout-app-shell.md` for the full pattern, the Reveal-style sub-
 6. Persist mappings with `useCloudStorage`; for datasheet selection use `useSettingsButton` + `useFields`.
 7. Check permissions before mutation.
 8. Verify 390px, 768px, 1440px, AND the 3 apitable widget panel sizes (~280px panel, ~600px expanded, ~1080px fullscreen). Run the layout verification checklist from the App Shell Layout section. Avoid `100vh` / `overflow:hidden` on root containers (Gotchas 3 & 6). The release script reads `EBIAOBIAO_HOST` and `EBIAOBIAO_API_TOKEN` from local configuration.
-9. **Publish with `npm run release:confirm`** (NOT `npm run release`) for the first release of any new packageId. The `:confirm` variant pipes `Y\n` to the create-package prompt. Grep output for `Successful create widgetPackage from server` to confirm registration. If that line is missing, the package was NOT created in the space.
+9. **First release of a new packageId:** pass `--version <v>` and pipe `Y` for the create-package prompt — do NOT use `--ci`, and do NOT rely on a bare `printf 'Y\n'` (it answers the version prompt, not create-package — see Gotcha 7). Grep output for `Successful create widgetPackage from server` to confirm registration. If that line is missing, the package was NOT created in the space.
 10. Final report: widget name, package ID, version, status, target space, table/view, key UI, responsive checks, container/browser verification.
 
 ## Commands
@@ -201,8 +237,10 @@ See `references/layout-app-shell.md` for the full pattern, the Reveal-style sub-
 ```bash
 npm install
 npm run build
-npm run release:confirm   # first release of a new packageId — answers Y to create-package prompt
-npm run release           # subsequent releases of an already-registered package
+# first release of a NEW packageId — version via flag, pipe Y for create-package, no --ci (Gotcha 7):
+NODE_TLS_REJECT_UNAUTHORIZED=0 bash -c 'printf "Y\n" | widget-cli release --version 0.1.0 \
+  --host "$EBIAOBIAO_HOST" --uploadHost "$EBIAOBIAO_HOST" --token "$EBIAOBIAO_API_TOKEN"'
+npm run release           # subsequent releases of an already-registered package (--ci is fine here)
 ```
 
 ## UI Rules

@@ -1,0 +1,24 @@
+{
+  "name": "materials-dify-assistant-widget",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "release": "widget-cli release --host https://app.ehv.csg.cn:7886 --uploadHost https://app.ehv.csg.cn:7886 --token \"$VIKA_API_TOKEN\" --ci",
+    "release:confirm": "printf 'Y\\nY\\n' | widget-cli release --host https://app.ehv.csg.cn:7886 --uploadHost https://app.ehv.csg.cn:7886 --token \"$VIKA_API_TOKEN\""
+  },
+  "dependencies": {
+    "@apitable/components": "^1.4.0",
+    "@apitable/widget-cli": "^1.3.0",
+    "@apitable/widget-sdk": "^1.10.1",
+    "@vitejs/plugin-react": "^6.0.1",
+    "vite": "^8.0.10",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
