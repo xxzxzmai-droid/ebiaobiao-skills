@@ -36,6 +36,6 @@ NODE_TLS_REJECT_UNAUTHORIZED=0 bash -c 'printf "Y\n" | widget-cli release --vers
 
 ## 已上线参考
 
-生产空间 `spcjCWa40legH` 已发布 `wpkMatAssist1`（「物资智能助手」），即由本例脚手架而来。
+生产空间 `spciqwmFzTSmF`（物资管理系统数据库）已发布 `wpkMatAssist2`（「物资智能助手」），即由本例脚手架而来。
 
 > `vite build` 在新版 vite/rolldown 下可能报 `failed to resolve "@apitable/widget-sdk"`——那是 rolldown 与 apitable SDK 包结构的兼容问题，与发布无关：`widget-cli release` 用自带 webpack 打包，`tsc --noEmit` 通过即可。

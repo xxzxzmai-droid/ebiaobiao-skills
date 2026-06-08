@@ -214,7 +214,7 @@ The widget runs inside e报表 (https) in the user's browser. To show the chat, 
 
 **Layout:** app-shell flex column — fixed header + optional cert-hint bar (`flex-shrink: 0`) and the `<iframe className="...">` filling the `flex: 1; min-height: 0` middle. Never `100vh`/sticky (Gotchas 3 & 6).
 
-**Publish:** new packageId → Gotcha 7 (`--version` flag + pipe `Y`, no `--ci`). Working example shipped to production: `wpkMatAssist1` (物资智能助手), space `spcjCWa40legH`.
+**Publish:** new packageId → Gotcha 7 (`--version` flag + pipe `Y`, no `--ci`). The space in `widget.config.json` must be the space the user actually works in — confirm it via Fusion `GET /fusion/v1/spaces` (the token can see several spaces; a stale config may point at a test space and the widget won't appear where expected). Working example shipped to production: `wpkMatAssist2` (物资智能助手), space `spciqwmFzTSmF`.
 
 ## Workflow
 

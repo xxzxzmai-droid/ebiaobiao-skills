@@ -1,6 +1,6 @@
 {
-  "packageId": "wpkMatAssist1",
-  "spaceId": "spcjCWa40legH",
+  "packageId": "wpkMatAssist2",
+  "spaceId": "spciqwmFzTSmF",
   "version": "0.1.0",
   "entry": "./src/widget.tsx",
   "name": {

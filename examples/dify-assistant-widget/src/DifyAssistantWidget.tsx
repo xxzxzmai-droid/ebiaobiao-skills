@@ -20,6 +20,11 @@ import { useCloudStorage, useSettingsButton } from '@apitable/widget-sdk';
 
 type EmbedPath = 'chatbot' | 'chat';
 
+// 开箱默认（可在「设置」里覆盖）：指向本部署的 Dify。token 为 Dify 公开 embed token，非密钥。
+// 注意：内网自签证书地址，浏览器首次需信任证书后 iframe 才会加载（见顶部证书提示条）。
+const DEFAULT_DIFY_BASE = 'https://10.134.252.232:5030/dify';
+const DEFAULT_DIFY_TOKEN = 'e8YydeOGAYYIBAi4';
+
 function trimUrl(u: string): string {
   return (u || '').trim().replace(/\/+$/, '');
 }
@@ -50,8 +55,8 @@ export const DifyAssistantWidget: React.FC = () => {
   const [isShowingSettings] = useSettingsButton();
 
   // 配置项（空间内持久共享）；editable 表示当前用户是否有写权限。
-  const [baseUrl, setBaseUrl, editable] = useCloudStorage<string>('difyBaseUrl', '');
-  const [token, setToken] = useCloudStorage<string>('difyToken', '');
+  const [baseUrl, setBaseUrl, editable] = useCloudStorage<string>('difyBaseUrl', DEFAULT_DIFY_BASE);
+  const [token, setToken] = useCloudStorage<string>('difyToken', DEFAULT_DIFY_TOKEN);
   const [embedPath, setEmbedPath] = useCloudStorage<EmbedPath>('difyEmbedPath', 'chatbot');
   const [demoRole, setDemoRole] = useCloudStorage<string>('difyDemoRole', '');
   const [demoOrgId, setDemoOrgId] = useCloudStorage<string>('difyDemoOrgId', '');
