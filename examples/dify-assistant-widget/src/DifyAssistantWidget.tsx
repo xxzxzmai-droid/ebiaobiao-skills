@@ -4,24 +4,17 @@ import { useCloudStorage, useSettingsButton } from '@apitable/widget-sdk';
 /**
  * 物资智能助手 e报表小程序
  *
- * 形态：在 e报表空间站里以 iframe 嵌入物资管理 Dify chatflow 智能体。
- * 配置：Dify 地址 / 对话 token / 嵌入路径 / 可选演示身份，全部存在小程序云存储
- *       （useCloudStorage，空间内共享、管理员设一次即可），不写死任何外链。
+ * 布局：根容器 position:fixed inset:0 铺满整个小程序 iframe（不依赖 height:100% 链，
+ *   避免宿主不给定高时塌成一条）；细顶栏 flex-shrink:0；对话 iframe 用 absolute inset:0
+ *   填满中段。证书提示收进 ⓘ 图标按需展开，默认不占地方。
  *
- * 自签证书坑：宿主是 e报表（https），Dify 多为内网自签证书。浏览器会以
- *   「混合内容 / 证书不受信」静默拦掉 iframe（一片空白、且不触发 onError）。
- *   解法：首次使用先在新标签打开 Dify 地址、点「继续访问(不安全)」让浏览器
- *   记住该来源的证书例外，再回到小程序点「重新加载」。根治办法是用有效证书
- *   把 Dify 暴露出来。
- *
- * 布局：严格遵循 e报表小程序 app-shell（flex 列 + 唯一滚动中段），
- *   宿主 iframe 高度受控且 overflow:hidden，不能依赖 body 滚动 / sticky。
+ * 配置：Dify 地址 / token / 路径 / 演示身份存 useCloudStorage（空间共享）；
+ *   已预填默认 Dify 地址与 embed token，装上即用。
  */
 
 type EmbedPath = 'chatbot' | 'chat';
 
-// 开箱默认（可在「设置」里覆盖）：指向本部署的 Dify。token 为 Dify 公开 embed token，非密钥。
-// 注意：内网自签证书地址，浏览器首次需信任证书后 iframe 才会加载（见顶部证书提示条）。
+// 开箱默认（可在「设置」覆盖）。token 为 Dify 公开 embed token，非密钥。
 const DEFAULT_DIFY_BASE = 'https://10.134.252.232:5030/dify';
 const DEFAULT_DIFY_TOKEN = 'e8YydeOGAYYIBAi4';
 
@@ -29,7 +22,6 @@ function trimUrl(u: string): string {
   return (u || '').trim().replace(/\/+$/, '');
 }
 
-/** 拼 Dify 嵌入 URL：`<base>/<path>/<token>` + 可选明文身份参数。 */
 function buildSrc(
   base: string,
   token: string,
@@ -51,10 +43,8 @@ function buildSrc(
 }
 
 export const DifyAssistantWidget: React.FC = () => {
-  // 顶部设置按钮：返回 [是否显示设置, 切换函数]
   const [isShowingSettings] = useSettingsButton();
 
-  // 配置项（空间内持久共享）；editable 表示当前用户是否有写权限。
   const [baseUrl, setBaseUrl, editable] = useCloudStorage<string>('difyBaseUrl', DEFAULT_DIFY_BASE);
   const [token, setToken] = useCloudStorage<string>('difyToken', DEFAULT_DIFY_TOKEN);
   const [embedPath, setEmbedPath] = useCloudStorage<EmbedPath>('difyEmbedPath', 'chatbot');
@@ -62,48 +52,52 @@ export const DifyAssistantWidget: React.FC = () => {
   const [demoOrgId, setDemoOrgId] = useCloudStorage<string>('difyDemoOrgId', '');
   const [demoOrgName, setDemoOrgName] = useCloudStorage<string>('difyDemoOrgName', '');
 
-  // 改一次 src 的 key，用于「重新加载」强制刷新 iframe。
   const [reloadKey, setReloadKey] = useState(0);
+  const [showTip, setShowTip] = useState(false);
 
   const src = useMemo(
     () => buildSrc(baseUrl, token, embedPath, demoRole, demoOrgId, demoOrgName),
     [baseUrl, token, embedPath, demoRole, demoOrgId, demoOrgName],
   );
-
   const difyOrigin = trimUrl(baseUrl);
   const configured = Boolean(src);
 
   return (
     <div className="assist-root">
-      {/* 顶栏（固定高度，绝不滚走） */}
-      <header className="assist-header">
-        <div className="assist-title">
+      {/* 细顶栏 */}
+      <header className="assist-bar">
+        <span className="assist-title">
           <span className="assist-dot" />
           物资智能助手
-        </div>
-        <div className="assist-header-actions">
-          {configured && (
-            <button className="assist-btn" onClick={() => setReloadKey((k) => k + 1)}>
-              重新加载
+        </span>
+        {configured && !isShowingSettings && (
+          <span className="assist-tools">
+            <button className="assist-icon" title="重新加载" onClick={() => setReloadKey((k) => k + 1)}>
+              ⟳
             </button>
-          )}
-        </div>
+            <button
+              className={'assist-icon' + (showTip ? ' assist-icon--on' : '')}
+              title="空白？证书帮助"
+              onClick={() => setShowTip((s) => !s)}
+            >
+              ⓘ
+            </button>
+          </span>
+        )}
       </header>
 
-      {/* 自签证书提示条（仅在已配置且为 https 内网地址时给出引导） */}
-      {configured && (
-        <div className="assist-certbar">
-          首次空白？多半是 Dify 自签证书未被浏览器信任 ——
-          <a href={difyOrigin} target="_blank" rel="noreferrer" className="assist-link">
-            ① 新标签打开 Dify 并点「继续访问」
+      {/* 证书提示：默认收起，点 ⓘ 展开 */}
+      {showTip && configured && !isShowingSettings && (
+        <div className="assist-tip">
+          面板空白多为 Dify 自签证书未被信任：
+          <a href={difyOrigin} target="_blank" rel="noreferrer">
+            新标签打开 Dify → 点「继续访问」
           </a>
-          <button className="assist-link assist-linkbtn" onClick={() => setReloadKey((k) => k + 1)}>
-            ② 回来点「重新加载」
-          </button>
+          ，再点 ⟳ 重新加载。
         </div>
       )}
 
-      {/* 唯一滚动/内容中段 */}
+      {/* 内容中段：iframe / 设置 / 空态 均绝对铺满 */}
       <main className="assist-body">
         {isShowingSettings ? (
           <SettingsPanel
@@ -114,14 +108,7 @@ export const DifyAssistantWidget: React.FC = () => {
             demoRole={demoRole}
             demoOrgId={demoOrgId}
             demoOrgName={demoOrgName}
-            onChange={{
-              setBaseUrl,
-              setToken,
-              setEmbedPath,
-              setDemoRole,
-              setDemoOrgId,
-              setDemoOrgName,
-            }}
+            onChange={{ setBaseUrl, setToken, setEmbedPath, setDemoRole, setDemoOrgId, setDemoOrgName }}
           />
         ) : configured ? (
           <iframe
@@ -171,15 +158,13 @@ const SettingsPanel: React.FC<{
   onChange: Setters;
 }> = ({ editable, baseUrl, token, embedPath, demoRole, demoOrgId, demoOrgName, onChange }) => (
   <div className="assist-settings">
-    {!editable && (
-      <div className="assist-note">你没有该小程序的写权限，以下配置只读。</div>
-    )}
+    {!editable && <div className="assist-note">你没有该小程序的写权限，以下配置只读。</div>}
     <label className="assist-field">
       <span>Dify 地址（base）</span>
       <input
         disabled={!editable}
         value={baseUrl}
-        placeholder="https://你的dify域名 （如 https://dify.example.com）"
+        placeholder="https://你的dify域名/dify"
         onChange={(e) => onChange.setBaseUrl(e.target.value)}
       />
       <small>不要带末尾斜杠。内网自签地址可用，但浏览器需先信任其证书。</small>
@@ -219,7 +204,7 @@ const SettingsPanel: React.FC<{
       <input
         disabled={!editable}
         value={demoOrgId}
-        placeholder="所属机构 org_id（演示部门账号填其 org）"
+        placeholder="所属机构 org_id"
         onChange={(e) => onChange.setDemoOrgId(e.target.value)}
       />
     </label>
@@ -232,8 +217,6 @@ const SettingsPanel: React.FC<{
         onChange={(e) => onChange.setDemoOrgName(e.target.value)}
       />
     </label>
-    <div className="assist-note">
-      身份参数仅在「chat」路径以明文附加；「chatbot」标准嵌入默认走智能体内置演示身份。
-    </div>
+    <div className="assist-note">身份参数仅在「chat」路径以明文附加；「chatbot」走智能体内置演示身份。</div>
   </div>
 );

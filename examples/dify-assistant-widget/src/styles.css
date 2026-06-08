@@ -1,5 +1,6 @@
-/* e报表小程序 app-shell：宿主 iframe 高度受控、overflow:hidden，
-   必须用 flex 列 + 唯一滚动中段，不能依赖 body 滚动 / position:sticky / 100vh。 */
+/* e报表小程序：根容器 position:fixed inset:0 铺满整个小程序 iframe，
+   不依赖 height:100% 链（宿主不给定高也不会塌成一条）。
+   细顶栏 flex-shrink:0；对话/设置/空态用 absolute inset:0 填满中段。 */
 html,
 body {
   margin: 0;
@@ -8,118 +9,115 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Microsoft YaHei', sans-serif;
   color: #0f172a;
-  background: #f6f8fb;
+  background: #ffffff;
 }
 
 #root {
-  display: flex;
-  flex-direction: column;
   height: 100%;
-  overflow: hidden;
 }
 
 .assist-root {
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  flex: 1;
-  min-height: 0;
   overflow: hidden;
+  background: #ffffff;
 }
 
-/* 顶栏：flex-shrink:0，固定在列顶，不滚走 */
-.assist-header {
+/* 细顶栏 */
+.assist-bar {
   flex-shrink: 0;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 0 8px 0 12px;
+  border-bottom: 1px solid #eef2f7;
   background: #ffffff;
-  border-bottom: 1px solid #e3e8ef;
 }
 
 .assist-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
+  gap: 7px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .assist-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-.assist-header-actions {
+.assist-tools {
   display: flex;
-  gap: 6px;
+  gap: 2px;
 }
 
-.assist-btn {
-  border: 1px solid #d7dee8;
-  background: #f8fafc;
-  color: #334155;
-  border-radius: 8px;
-  padding: 4px 10px;
-  font-size: 12px;
+.assist-icon {
+  border: none;
+  background: none;
   cursor: pointer;
+  font-size: 15px;
+  line-height: 1;
+  color: #64748b;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
 }
-.assist-btn:hover {
-  background: #eef2f7;
+.assist-icon:hover {
+  background: #f1f5f9;
+  color: #2563eb;
+}
+.assist-icon--on {
+  background: #eff6ff;
+  color: #2563eb;
 }
 
-/* 证书提示条：固定高度，不滚走 */
-.assist-certbar {
+/* 证书提示：按需展开 */
+.assist-tip {
   flex-shrink: 0;
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.55;
   color: #92400e;
   background: #fffbeb;
   border-bottom: 1px solid #fde68a;
   padding: 6px 12px;
 }
-
-.assist-link {
+.assist-tip a {
   color: #2563eb;
   text-decoration: none;
-  margin-left: 6px;
 }
-.assist-link:hover {
+.assist-tip a:hover {
   text-decoration: underline;
 }
-.assist-linkbtn {
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 0;
-  font-size: 12px;
-}
 
-/* 唯一滚动/内容中段 */
+/* 内容中段：相对定位容器，子元素绝对铺满 */
 .assist-body {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  position: relative;
+  background: #ffffff;
 }
 
-/* iframe 填满内容中段 */
+/* 对话 iframe：绝对铺满整个中段 */
 .assist-iframe {
-  flex: 1;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   width: 100%;
+  height: 100%;
   border: none;
-  background: #ffffff;
+  display: block;
 }
 
 /* 空状态 */
 .assist-empty {
-  flex: 1;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -142,10 +140,10 @@ body {
   line-height: 1.7;
 }
 
-/* 设置面板：自身可滚动 */
+/* 设置面板：绝对铺满 + 自身滚动 */
 .assist-settings {
-  flex: 1;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 14px 14px 28px;
